@@ -50,6 +50,8 @@ func (auth *SpotifyAuth) getToken(code []string) (*Spotify, error) {
 	if err := json.Unmarshal(body, &token); err != nil {
 		return nil, err
 	}
+	token.ClientId = auth.ClientId
+	token.ClientSecret = auth.ClientSecret
 	return &token, nil
 }
 
