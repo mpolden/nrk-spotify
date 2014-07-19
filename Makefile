@@ -2,13 +2,10 @@ PREFIX ?= /usr/local
 GO=go
 NAME=nrk-spotify
 
-all: fmt test
+all: fmt
 
 fmt:
 	gofmt -w=true *.go
-
-run:
-	$(GO) run util.go main.go
 
 build:
 	mkdir -p bin
@@ -17,5 +14,5 @@ build:
 install:
 	cp -p bin/$(NAME) $(PREFIX)/bin/$(NAME)
 
-test:
-	$(GO) test
+deps:
+	go get -u github.com/nitrous-io/goop
