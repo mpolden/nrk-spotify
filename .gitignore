@@ -1,4 +1,5 @@
 /.token.json
+/.vendor/
 /bin/
 /pkg/
 /src/
