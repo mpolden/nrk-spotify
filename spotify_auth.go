@@ -17,41 +17,6 @@ type SpotifyAuth struct {
 	TokenFile    string
 }
 
-type SpotifyToken struct {
-	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    uint   `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"`
-}
-
-func (token *SpotifyToken) authHeader() string {
-	return fmt.Sprintf("%s %s", token.TokenType, token.AccessToken)
-}
-
-func (token *SpotifyToken) save(filepath string) error {
-	json, err := json.Marshal(token)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(filepath, json, 0600)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func ReadToken(filepath string) (*SpotifyToken, error) {
-	data, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		return nil, err
-	}
-	var token SpotifyToken
-	if err := json.Unmarshal(data, &token); err != nil {
-		return nil, err
-	}
-	return &token, nil
-}
-
 func (auth *SpotifyAuth) login(w http.ResponseWriter, r *http.Request) {
 	params := url.Values{
 		"response_type": {"code"},
@@ -63,7 +28,7 @@ func (auth *SpotifyAuth) login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
-func (auth *SpotifyAuth) getToken(code []string) (*SpotifyToken, error) {
+func (auth *SpotifyAuth) getToken(code []string) (*Spotify, error) {
 	formData := url.Values{
 		"code":          code,
 		"redirect_uri":  {auth.CallbackUrl},
@@ -81,7 +46,7 @@ func (auth *SpotifyAuth) getToken(code []string) (*SpotifyToken, error) {
 	if err != nil {
 		return nil, err
 	}
-	var token SpotifyToken
+	var token Spotify
 	if err := json.Unmarshal(body, &token); err != nil {
 		return nil, err
 	}
