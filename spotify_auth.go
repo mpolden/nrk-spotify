@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/mitchellh/colorstring"
@@ -10,11 +11,17 @@ import (
 )
 
 type SpotifyAuth struct {
-	ClientId     string
-	ClientSecret string
-	CallbackUrl  string
-	Scope        string
-	TokenFile    string
+	ClientId     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	CallbackUrl  string `json:"callback_url"`
+	Scope        string `json:"scope"`
+	TokenFile    string `json:"token_file"`
+}
+
+func (auth *SpotifyAuth) authHeader() string {
+	data := auth.ClientId + ":" + auth.ClientSecret
+	return "Basic " + base64.StdEncoding.EncodeToString(
+		[]byte(data))
 }
 
 func (auth *SpotifyAuth) login(w http.ResponseWriter, r *http.Request) {
@@ -50,8 +57,7 @@ func (auth *SpotifyAuth) getToken(code []string) (*Spotify, error) {
 	if err := json.Unmarshal(body, &token); err != nil {
 		return nil, err
 	}
-	token.ClientId = auth.ClientId
-	token.ClientSecret = auth.ClientSecret
+	token.Auth = *auth
 	return &token, nil
 }
 

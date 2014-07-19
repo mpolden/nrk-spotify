@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -10,12 +9,11 @@ import (
 )
 
 type Spotify struct {
-	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    uint   `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"`
-	ClientId     string `json:"client_id"`
-	ClientSecret string `json:"client_secret"`
+	AccessToken  string      `json:"access_token"`
+	TokenType    string      `json:"token_type"`
+	ExpiresIn    uint        `json:"expires_in"`
+	RefreshToken string      `json:"refresh_token"`
+	Auth         SpotifyAuth `json:"auth"`
 }
 
 type SpotifyProfile struct {
@@ -24,6 +22,12 @@ type SpotifyProfile struct {
 	Id           string            `json:"id"`
 	Type         string            `json:"type"`
 	Uri          string            `json:"uri"`
+}
+
+func (spotify *Spotify) update(newToken *Spotify) {
+	spotify.AccessToken = newToken.AccessToken
+	spotify.TokenType = newToken.TokenType
+	spotify.ExpiresIn = newToken.ExpiresIn
 }
 
 func (spotify *Spotify) refreshToken() error {
@@ -35,7 +39,7 @@ func (spotify *Spotify) refreshToken() error {
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", url,
 		bytes.NewBufferString(formData.Encode()))
-	req.Header.Set("Authorization", spotify.refreshAuthHeader())
+	req.Header.Set("Authorization", spotify.Auth.authHeader())
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := client.Do(req)
 	if err != nil {
@@ -51,15 +55,8 @@ func (spotify *Spotify) refreshToken() error {
 	if err := json.Unmarshal(body, &newToken); err != nil {
 		return err
 	}
-	spotify.AccessToken = newToken.AccessToken
-	spotify.TokenType = newToken.TokenType
-	spotify.ExpiresIn = newToken.ExpiresIn
+	spotify.update(&newToken)
 	return nil
-}
-
-func (spotify *Spotify) refreshAuthHeader() string {
-	data := spotify.ClientId + ":" + spotify.ClientSecret
-	return "Basic " + base64.StdEncoding.EncodeToString([]byte(data))
 }
 
 func (spotify *Spotify) authHeader() string {
@@ -84,6 +81,9 @@ func (spotify *Spotify) get(url string) (*http.Response, error) {
 	// Check if we need to refresh token
 	if resp.StatusCode == 401 {
 		if err := spotify.refreshToken(); err != nil {
+			return nil, err
+		}
+		if err := spotify.save(spotify.Auth.TokenFile); err != nil {
 			return nil, err
 		}
 		return spotify.newRequest(url)
