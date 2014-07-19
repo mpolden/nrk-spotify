@@ -24,6 +24,10 @@ type SpotifyToken struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+func (token *SpotifyToken) authHeader() string {
+	return fmt.Sprintf("%s %s", token.TokenType, token.AccessToken)
+}
+
 func (token *SpotifyToken) save(filepath string) error {
 	json, err := json.Marshal(token)
 	if err != nil {
@@ -34,6 +38,18 @@ func (token *SpotifyToken) save(filepath string) error {
 		return err
 	}
 	return nil
+}
+
+func ReadToken(filepath string) (*SpotifyToken, error) {
+	data, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return nil, err
+	}
+	var token SpotifyToken
+	if err := json.Unmarshal(data, &token); err != nil {
+		return nil, err
+	}
+	return &token, nil
 }
 
 func (auth *SpotifyAuth) login(w http.ResponseWriter, r *http.Request) {

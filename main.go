@@ -5,6 +5,7 @@ import (
 	"github.com/docopt/docopt-go"
 	"github.com/mitchellh/colorstring"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -23,12 +24,15 @@ func parseArgs(args map[string]interface{}) Args {
 	server := args["server"].(bool)
 	listenOption := args["--listen"]
 	tokenFileOption := args["--token-file"]
-	clientId := args["<client-id>"].(string)
-	clientSecret := args["<client-secret>"].(string)
-
+	clientId := ""
+	clientSecret := ""
 	listen := ":8080"
-	if listenOption != nil {
-		listen = listenOption.(string)
+	if auth {
+		clientId = args["<client-id>"].(string)
+		clientSecret = args["<client-secret>"].(string)
+		if listenOption != nil {
+			listen = listenOption.(string)
+		}
 	}
 	tokenFile := ".token.json"
 	if tokenFileOption != nil {
@@ -93,6 +97,12 @@ Options:
 		http.ListenAndServe(args.Listen, nil)
 	}
 	if args.Server {
-		// XXX: Run sync server
+		token, err := ReadToken(args.TokenFile)
+		if err != nil {
+			fmt.Printf("Failed to read file: %s", err)
+			os.Exit(1)
+		}
+		fmt.Println(token)
+		// XXX: Sync radio and playlist
 	}
 }
