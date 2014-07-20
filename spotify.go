@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -22,6 +23,15 @@ type SpotifyProfile struct {
 	Id           string            `json:"id"`
 	Type         string            `json:"type"`
 	Uri          string            `json:"uri"`
+}
+
+type Playlist struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type Playlists struct {
+	Items []Playlist `json:"items"`
 }
 
 func (spotify *Spotify) update(newToken *Spotify) {
@@ -131,4 +141,32 @@ func (spotify *Spotify) currentUser() (*SpotifyProfile, error) {
 		return nil, err
 	}
 	return &profile, nil
+}
+
+func (spotify *Spotify) playlists(profile *SpotifyProfile) (*Playlists, error) {
+	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists",
+		profile.Id)
+	body, err := spotify.get(url)
+	if err != nil {
+		return nil, err
+	}
+	var playlists Playlists
+	if err := json.Unmarshal(body, &playlists); err != nil {
+		return nil, err
+	}
+	return &playlists, nil
+}
+
+func (spotify *Spotify) playlist(profile *SpotifyProfile,
+	name string) (*Playlist, error) {
+	playlists, err := spotify.playlists(profile)
+	if err != nil {
+		return nil, err
+	}
+	for _, playlist := range playlists.Items {
+		if playlist.Name == name {
+			return &playlist, nil
+		}
+	}
+	return nil, fmt.Errorf("Could not find playlist by name: %s", name)
 }
