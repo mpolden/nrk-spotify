@@ -153,6 +153,10 @@ func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
 		}
 		resp, err = spotify.doPost(url, body)
 	}
+	if resp.StatusCode / 100 != 2 {
+		return nil, fmt.Errorf("Request failed, status code: %s",
+			resp.StatusCode)
+	}
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -278,4 +282,24 @@ func (spotify *Spotify) searchArtistTrack(artist string, track string) ([]Track,
 	error) {
 	query := fmt.Sprintf("artist:%s track:%s", artist, track)
 	return spotify.search(query, "track", 1)
+}
+
+func (spotify *Spotify) addTracks(playlist *Playlist, tracks []Track) error {
+	url := fmt.Sprintf(
+		"https://api.spotify.com/v1/users/%s/playlists/%s/tracks",
+		spotify.Profile.Id, playlist.Id)
+
+	uris := make([]string, len(tracks))
+	for idx, track := range tracks {
+		uris[idx] = track.Uri
+	}
+	jsonUris, err := json.Marshal(uris)
+	if err != nil {
+		return err
+	}
+	if _, err := spotify.post(url, jsonUris); err != nil {
+		return err
+	}
+	return nil
+
 }
