@@ -309,10 +309,17 @@ func (spotify *Spotify) search(query string, types string, limit uint) ([]Track,
 	return result.Tracks.Items, nil
 }
 
-func (spotify *Spotify) searchArtistTrack(artist string, track string) ([]Track,
+func (spotify *Spotify) searchArtistTrack(artist string, track string) (*Track,
 	error) {
 	query := fmt.Sprintf("artist:%s track:%s", artist, track)
-	return spotify.search(query, "track", 1)
+	tracks, err := spotify.search(query, "track", 1)
+	if err != nil {
+		return nil, err
+	}
+	if len(tracks) > 0 {
+		return &tracks[0], nil
+	}
+	return nil, fmt.Errorf("Not found")
 }
 
 func (spotify *Spotify) addTracks(playlist *Playlist, tracks []Track) error {
@@ -333,4 +340,8 @@ func (spotify *Spotify) addTracks(playlist *Playlist, tracks []Track) error {
 	}
 	return nil
 
+}
+
+func (spotify *Spotify) addTrack(playlist *Playlist, track *Track) error {
+	return spotify.addTracks(playlist, []Track{*track})
 }
