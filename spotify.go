@@ -28,8 +28,17 @@ type SpotifyProfile struct {
 }
 
 type Playlist struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id     string         `json:"id"`
+	Name   string         `json:"name"`
+	Tracks PlaylistTracks `json:"tracks"`
+}
+
+type PlaylistTracks struct {
+	Items []PlaylistTrack `json:"items"`
+}
+
+type PlaylistTrack struct {
+	Track Track `json:"track"`
 }
 
 type Playlists struct {
@@ -53,6 +62,15 @@ type Track struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 	Uri  string `json:"uri"`
+}
+
+func (playlist *Playlist) contains(track Track) bool {
+	for _, item := range playlist.Tracks.Items {
+		if item.Track.Id == track.Id {
+			return true
+		}
+	}
+	return false
 }
 
 func (spotify *Spotify) update(newToken *Spotify) {
@@ -221,23 +239,36 @@ func (spotify *Spotify) playlist(name string) (*Playlist, error) {
 	if err != nil {
 		return nil, err
 	}
+	playlistId := ""
 	for _, playlist := range playlists {
 		if playlist.Name == name {
-			return &playlist, nil
+			playlistId = playlist.Id
+			break
 		}
 	}
-	return nil, fmt.Errorf("Could not find playlist by name: %s", name)
-}
-
-func (spotify *Spotify) getOrCreatePlaylist(name string) (*Playlist, error) {
-	playlists, err := spotify.playlists()
+	if playlistId == "" {
+		return nil, nil
+	}
+	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists/%s",
+		spotify.Profile.Id, playlistId)
+	body, err := spotify.get(url)
 	if err != nil {
 		return nil, err
 	}
-	for _, playlist := range playlists {
-		if playlist.Name == name {
-			return &playlist, nil
-		}
+	var playlist Playlist
+	if err := json.Unmarshal(body, &playlist); err != nil {
+		return nil, err
+	}
+	return &playlist, nil
+}
+
+func (spotify *Spotify) getOrCreatePlaylist(name string) (*Playlist, error) {
+	existing, err := spotify.playlist(name)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
 	}
 	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists",
 		spotify.Profile.Id)
