@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -9,6 +10,8 @@ import (
 	"net/http"
 	"net/url"
 )
+
+const stateKey string = "spotify_auth_state"
 
 type SpotifyAuth struct {
 	ClientId     string `json:"client_id"`
@@ -24,12 +27,31 @@ func (auth *SpotifyAuth) authHeader() string {
 		[]byte(data))
 }
 
+func base64Rand(size uint) (string, error) {
+	b := make([]byte, size)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(b), nil
+}
+
 func (auth *SpotifyAuth) login(w http.ResponseWriter, r *http.Request) {
+	state, err := base64Rand(32)
+	if err != nil {
+		http.Error(w, "Failed to generate state value", 400)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:  stateKey,
+		Value: state,
+	})
 	params := url.Values{
 		"response_type": {"code"},
 		"client_id":     {auth.ClientId},
 		"scope":         {auth.Scope},
 		"redirect_uri":  {auth.CallbackUrl},
+		"state":         {state},
 	}
 	url := "https://accounts.spotify.com/authorize?" + params.Encode()
 	http.Redirect(w, r, url, http.StatusFound)
@@ -62,15 +84,22 @@ func (auth *SpotifyAuth) getToken(code []string) (*Spotify, error) {
 }
 
 func (auth *SpotifyAuth) callback(w http.ResponseWriter, r *http.Request) {
-	queryParams := r.URL.Query()
-	code, exists := queryParams["code"]
+	params := r.URL.Query()
+	state := params["state"]
+	cookie, _ := r.Cookie(stateKey)
+
+	if state == nil || cookie == nil || cookie.Value != state[0] {
+		http.Error(w, "Could not validate request", 400)
+		return
+	}
+
+	code, exists := params["code"]
 	if !exists {
 		http.Error(w, "Missing required query parameter: code", 400)
 		return
 	}
 	token, err := auth.getToken(code)
 	if err != nil {
-		fmt.Printf("Failed to get token: %s\n", err)
 		http.Error(w, "Failed to retrieve token from Spotify", 400)
 		return
 	}
