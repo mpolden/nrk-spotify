@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 type Spotify struct {
@@ -37,6 +38,20 @@ type Playlists struct {
 type NewPlaylist struct {
 	Name   string `json:"name"`
 	Public bool   `json:"public"`
+}
+
+type SearchResult struct {
+	Tracks Tracks `json:"tracks"`
+}
+
+type Tracks struct {
+	Items []Track `json:"items"`
+}
+
+type Track struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Uri  string `json:"uri"`
 }
 
 func (spotify *Spotify) update(newToken *Spotify) {
@@ -240,4 +255,29 @@ func (spotify *Spotify) createPlaylist(profile *SpotifyProfile,
 		return nil, err
 	}
 	return &playlist, err
+}
+
+func (spotify *Spotify) search(query string, types string, limit uint) ([]Track,
+	error) {
+	params := url.Values{
+		"q":     {query},
+		"type":  {types},
+		"limit": {strconv.Itoa(int(limit))},
+	}
+	url := "https://api.spotify.com/v1/search?" + params.Encode()
+	body, err := spotify.get(url)
+	if err != nil {
+		return nil, err
+	}
+	var result SearchResult
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, err
+	}
+	return result.Tracks.Items, nil
+}
+
+func (spotify *Spotify) searchArtistTrack(artist string, track string) ([]Track,
+	error) {
+	query := fmt.Sprintf("artist:%s track:%s", artist, track)
+	return spotify.search(query, "track", 1)
 }
