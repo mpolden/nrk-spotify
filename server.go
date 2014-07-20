@@ -62,6 +62,9 @@ func (sync *SyncServer) run() error {
 			log.Printf("Failed to add %+v: %s", track, err)
 			continue
 		}
+		// Refresh playlist
+		playlist, err := sync.Spotify.playlistById(sync.Playlist.Id)
+		sync.Playlist = playlist
 		log.Printf("Added: %+v\n", track)
 	}
 	return nil

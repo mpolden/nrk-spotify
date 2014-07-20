@@ -234,6 +234,20 @@ func (spotify *Spotify) playlists() ([]Playlist, error) {
 	return playlists.Items, nil
 }
 
+func (spotify *Spotify) playlistById(playlistId string) (*Playlist, error) {
+	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists/%s",
+		spotify.Profile.Id, playlistId)
+	body, err := spotify.get(url)
+	if err != nil {
+		return nil, err
+	}
+	var playlist Playlist
+	if err := json.Unmarshal(body, &playlist); err != nil {
+		return nil, err
+	}
+	return &playlist, nil
+}
+
 func (spotify *Spotify) playlist(name string) (*Playlist, error) {
 	playlists, err := spotify.playlists()
 	if err != nil {
@@ -249,17 +263,7 @@ func (spotify *Spotify) playlist(name string) (*Playlist, error) {
 	if playlistId == "" {
 		return nil, nil
 	}
-	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists/%s",
-		spotify.Profile.Id, playlistId)
-	body, err := spotify.get(url)
-	if err != nil {
-		return nil, err
-	}
-	var playlist Playlist
-	if err := json.Unmarshal(body, &playlist); err != nil {
-		return nil, err
-	}
-	return &playlist, nil
+	return spotify.playlistById(playlistId)
 }
 
 func (spotify *Spotify) getOrCreatePlaylist(name string) (*Playlist, error) {
