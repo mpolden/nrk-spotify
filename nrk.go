@@ -8,7 +8,8 @@ import (
 )
 
 type NrkRadio struct {
-	Url string
+	Name string
+	Url  string
 }
 
 type RadioPlaylist struct {
