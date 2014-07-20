@@ -34,6 +34,11 @@ type Playlists struct {
 	Items []Playlist `json:"items"`
 }
 
+type NewPlaylist struct {
+	Name   string `json:"name"`
+	Public bool   `json:"public"`
+}
+
 func (spotify *Spotify) update(newToken *Spotify) {
 	spotify.AccessToken = newToken.AccessToken
 	spotify.TokenType = newToken.TokenType
@@ -73,7 +78,7 @@ func (spotify *Spotify) authHeader() string {
 	return spotify.TokenType + " " + spotify.AccessToken
 }
 
-func (spotify *Spotify) newRequest(url string) (*http.Response, error) {
+func (spotify *Spotify) doGet(url string) (*http.Response, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Set("Authorization", spotify.authHeader())
@@ -84,7 +89,7 @@ func (spotify *Spotify) newRequest(url string) (*http.Response, error) {
 }
 
 func (spotify *Spotify) get(url string) ([]byte, error) {
-	resp, err := spotify.newRequest(url)
+	resp, err := spotify.doGet(url)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +101,7 @@ func (spotify *Spotify) get(url string) ([]byte, error) {
 		if err := spotify.save(spotify.Auth.TokenFile); err != nil {
 			return nil, err
 		}
-		resp, err = spotify.newRequest(url)
+		resp, err = spotify.doGet(url)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -104,6 +109,40 @@ func (spotify *Spotify) get(url string) ([]byte, error) {
 		return nil, err
 	}
 	return body, err
+}
+
+func (spotify *Spotify) doPost(url string, body []byte) (*http.Response,
+	error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	req.Header.Set("Authorization", spotify.authHeader())
+	req.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		return nil, err
+	}
+	return client.Do(req)
+}
+
+func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
+	resp, err := spotify.doPost(url, body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == 401 {
+		if err := spotify.refreshToken(); err != nil {
+			return nil, err
+		}
+		if err := spotify.save(spotify.Auth.TokenFile); err != nil {
+			return nil, err
+		}
+		resp, err = spotify.doPost(url, body)
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return data, err
 }
 
 func (spotify *Spotify) save(filepath string) error {
@@ -169,4 +208,36 @@ func (spotify *Spotify) playlist(profile *SpotifyProfile,
 		}
 	}
 	return nil, fmt.Errorf("Could not find playlist by name: %s", name)
+}
+
+func (spotify *Spotify) createPlaylist(profile *SpotifyProfile,
+	name string) (*Playlist, error) {
+	playlists, err := spotify.playlists(profile)
+	if err != nil {
+		return nil, err
+	}
+	for _, playlist := range playlists.Items {
+		if playlist.Name == name {
+			return nil, fmt.Errorf(
+				"Playlist with name '%s' already exists", name)
+		}
+	}
+	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists",
+		profile.Id)
+	newPlaylist, err := json.Marshal(NewPlaylist{
+		Name:   name,
+		Public: false,
+	})
+	if err != nil {
+		return nil, err
+	}
+	body, err := spotify.post(url, newPlaylist)
+	if err != nil {
+		return nil, err
+	}
+	var playlist Playlist
+	if err := json.Unmarshal(body, &playlist); err != nil {
+		return nil, err
+	}
+	return &playlist, err
 }
