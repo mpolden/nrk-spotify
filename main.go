@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/docopt/docopt-go"
 	"github.com/mitchellh/colorstring"
+	"log"
 	"net/http"
-	"os"
 	"strings"
 )
 
@@ -17,6 +17,8 @@ type Args struct {
 	ClientId     string
 	ClientSecret string
 	Scope        string
+	RadioName    string
+	ApiUrl       string
 }
 
 func parseArgs(args map[string]interface{}) Args {
@@ -27,12 +29,18 @@ func parseArgs(args map[string]interface{}) Args {
 	clientId := ""
 	clientSecret := ""
 	listen := ":8080"
+	radioName := ""
+	apiUrl := ""
 	if auth {
 		clientId = args["<client-id>"].(string)
 		clientSecret = args["<client-secret>"].(string)
 		if listenOption != nil {
 			listen = listenOption.(string)
 		}
+	}
+	if server {
+		radioName = args["<radio-name>"].(string)
+		apiUrl = args["<api-url>"].(string)
 	}
 	tokenFile := ".token.json"
 	if tokenFileOption != nil {
@@ -48,6 +56,8 @@ func parseArgs(args map[string]interface{}) Args {
 		ClientId:     clientId,
 		ClientSecret: clientSecret,
 		Scope:        scope,
+		RadioName:    radioName,
+		ApiUrl:       apiUrl,
 	}
 }
 
@@ -67,7 +77,7 @@ func main() {
 
 Usage:
   nrk-spotify auth [-l <address>] [-f <token-file>] <client-id> <client-secret>
-  nrk-spotify server [-f <token-file>]
+  nrk-spotify server [-f <token-file>] <radio-name> <api-url>
   nrk-spotify -h | --help
 
 Options:
@@ -99,10 +109,35 @@ Options:
 	if args.Server {
 		token, err := ReadToken(args.TokenFile)
 		if err != nil {
-			fmt.Printf("Failed to read file: %s", err)
-			os.Exit(1)
+			log.Fatalf("Failed to read file: %s", err)
 		}
-		fmt.Println(token)
-		// XXX: Sync radio and playlist
+		// Set and save current user if profile is empty
+		if token.Profile.Id == "" {
+			profile, err := token.currentUser()
+			if err != nil {
+				log.Fatalf("Failed to get current user: %s\n",
+					err)
+
+			}
+			token.Profile = *profile
+			if err := token.save(token.Auth.TokenFile); err != nil {
+				log.Fatalf("Failed to save token: %s\n", err)
+			}
+		}
+
+		radio := NrkRadio{
+			Name: args.RadioName,
+			Url:  args.ApiUrl,
+		}
+		spotifyPlaylist, err := token.getOrCreatePlaylist(radio.Name)
+		if err != nil {
+			log.Fatalf("Failed to get or create playlist: %s", err)
+		}
+		server := SyncServer{
+			Spotify:  token,
+			Playlist: spotifyPlaylist,
+			Radio:    &radio,
+		}
+		server.Serve()
 	}
 }
