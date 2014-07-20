@@ -11,11 +11,12 @@ import (
 )
 
 type Spotify struct {
-	AccessToken  string      `json:"access_token"`
-	TokenType    string      `json:"token_type"`
-	ExpiresIn    uint        `json:"expires_in"`
-	RefreshToken string      `json:"refresh_token"`
-	Auth         SpotifyAuth `json:"auth"`
+	AccessToken  string         `json:"access_token"`
+	TokenType    string         `json:"token_type"`
+	ExpiresIn    uint           `json:"expires_in"`
+	RefreshToken string         `json:"refresh_token"`
+	Auth         SpotifyAuth    `json:"auth"`
+	Profile      SpotifyProfile `json:"profile"`
 }
 
 type SpotifyProfile struct {
@@ -197,9 +198,9 @@ func (spotify *Spotify) currentUser() (*SpotifyProfile, error) {
 	return &profile, nil
 }
 
-func (spotify *Spotify) playlists(profile *SpotifyProfile) (*Playlists, error) {
+func (spotify *Spotify) playlists() ([]Playlist, error) {
 	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists",
-		profile.Id)
+		spotify.Profile.Id)
 	body, err := spotify.get(url)
 	if err != nil {
 		return nil, err
@@ -208,16 +209,15 @@ func (spotify *Spotify) playlists(profile *SpotifyProfile) (*Playlists, error) {
 	if err := json.Unmarshal(body, &playlists); err != nil {
 		return nil, err
 	}
-	return &playlists, nil
+	return playlists.Items, nil
 }
 
-func (spotify *Spotify) playlist(profile *SpotifyProfile,
-	name string) (*Playlist, error) {
-	playlists, err := spotify.playlists(profile)
+func (spotify *Spotify) playlist(name string) (*Playlist, error) {
+	playlists, err := spotify.playlists()
 	if err != nil {
 		return nil, err
 	}
-	for _, playlist := range playlists.Items {
+	for _, playlist := range playlists {
 		if playlist.Name == name {
 			return &playlist, nil
 		}
@@ -225,20 +225,18 @@ func (spotify *Spotify) playlist(profile *SpotifyProfile,
 	return nil, fmt.Errorf("Could not find playlist by name: %s", name)
 }
 
-func (spotify *Spotify) createPlaylist(profile *SpotifyProfile,
-	name string) (*Playlist, error) {
-	playlists, err := spotify.playlists(profile)
+func (spotify *Spotify) getOrCreatePlaylist(name string) (*Playlist, error) {
+	playlists, err := spotify.playlists()
 	if err != nil {
 		return nil, err
 	}
-	for _, playlist := range playlists.Items {
+	for _, playlist := range playlists {
 		if playlist.Name == name {
-			return nil, fmt.Errorf(
-				"Playlist with name '%s' already exists", name)
+			return &playlist, nil
 		}
 	}
 	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists",
-		profile.Id)
+		spotify.Profile.Id)
 	newPlaylist, err := json.Marshal(NewPlaylist{
 		Name:   name,
 		Public: false,
