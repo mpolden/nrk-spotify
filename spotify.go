@@ -73,7 +73,7 @@ func (spotify *Spotify) newRequest(url string) (*http.Response, error) {
 	return client.Do(req)
 }
 
-func (spotify *Spotify) get(url string) (*http.Response, error) {
+func (spotify *Spotify) get(url string) ([]byte, error) {
 	resp, err := spotify.newRequest(url)
 	if err != nil {
 		return nil, err
@@ -86,9 +86,14 @@ func (spotify *Spotify) get(url string) (*http.Response, error) {
 		if err := spotify.save(spotify.Auth.TokenFile); err != nil {
 			return nil, err
 		}
-		return spotify.newRequest(url)
+		resp, err = spotify.newRequest(url)
 	}
-	return resp, err
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return body, err
 }
 
 func (spotify *Spotify) save(filepath string) error {
@@ -117,12 +122,7 @@ func ReadToken(filepath string) (*Spotify, error) {
 
 func (spotify *Spotify) currentUser() (*SpotifyProfile, error) {
 	url := "https://api.spotify.com/v1/me"
-	resp, err := spotify.get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := spotify.get(url)
 	if err != nil {
 		return nil, err
 	}
