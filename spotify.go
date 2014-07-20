@@ -153,7 +153,7 @@ func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
 		}
 		resp, err = spotify.doPost(url, body)
 	}
-	if resp.StatusCode / 100 != 2 {
+	if resp.StatusCode/100 != 2 {
 		return nil, fmt.Errorf("Request failed, status code: %s",
 			resp.StatusCode)
 	}
