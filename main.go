@@ -24,7 +24,7 @@ type Args struct {
 	Interval     time.Duration
 }
 
-func makeArgs(args map[string]interface{}) (Args, error) {
+func makeArgs(args map[string]interface{}) (*Args, error) {
 	auth := args["auth"].(bool)
 	server := args["server"].(bool)
 	listen := args["--listen"].(string)
@@ -44,9 +44,9 @@ func makeArgs(args map[string]interface{}) (Args, error) {
 	}
 	interval, err := strconv.Atoi(intervalOpt)
 	if err != nil || interval < 1 {
-		fmt.Errorf("--interval must be an positive integer")
+		return nil, fmt.Errorf("--interval must be an positive integer")
 	}
-	return Args{
+	return &Args{
 		Auth:         auth,
 		Listen:       listen,
 		Server:       server,
