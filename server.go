@@ -18,7 +18,7 @@ func (sync *SyncServer) Serve() {
 
 	log.Printf("Server started. Syncing every %d minute(s)", sync.Interval)
 	f := func() {
-		log.Print("Running sync")
+		logColorf("[light_magenta]Running sync[reset]")
 		if err := sync.run(); err != nil {
 			log.Printf("Sync failed: %s\n", err)
 		}
@@ -50,7 +50,8 @@ func (sync *SyncServer) run() error {
 			logColorf("[red]Failed to parse metadata: %s[reset]",
 				err)
 		} else {
-			log.Printf("%s is currently playing: %s - %s [%s] [%s]",
+			logColorf("[cyan]%s is currently playing: %s - %s"+
+				"[reset] [%s] [%s]",
 				sync.Radio.Name, current.Artist, current.Track,
 				meta.PositionString(),
 				meta.PositionSymbol(10, true))
@@ -58,7 +59,7 @@ func (sync *SyncServer) run() error {
 	}
 
 	for _, t := range radioTracks {
-		logColorf("[blue]Searching for %s[reset]", t.String())
+		logColorf("Searching for: %s", t.String())
 		if !t.IsMusic() {
 			logColorf("[green]Not music, skipping: %s[reset]",
 				t.String())
@@ -66,7 +67,7 @@ func (sync *SyncServer) run() error {
 		}
 		track, err := sync.Spotify.searchArtistTrack(t.Artist, t.Track)
 		if err != nil {
-			logColorf("[red]No result for %s: %s[reset]",
+			logColorf("[red]Not found: %s (%s)[reset]",
 				t.String(), err)
 			continue
 		}
@@ -77,7 +78,7 @@ func (sync *SyncServer) run() error {
 		}
 		if err = sync.Spotify.addTrack(sync.Playlist,
 			track); err != nil {
-			logColorf("[red]Failed to add %s: %s[reset]",
+			logColorf("[red]Failed to add: %s (%s)[reset]",
 				track.String(), err)
 			continue
 		}

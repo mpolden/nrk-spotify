@@ -323,7 +323,7 @@ func (spotify *Spotify) searchArtistTrack(artist string, track string) (*Track,
 	if len(tracks) > 0 {
 		return &tracks[0], nil
 	}
-	return nil, fmt.Errorf("Not found")
+	return nil, fmt.Errorf("0 matches")
 }
 
 func (spotify *Spotify) addTracks(playlist *Playlist, tracks []Track) error {
