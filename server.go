@@ -38,6 +38,18 @@ func (sync *SyncServer) run() error {
 	}
 
 	radioTracks := radioPlaylist.Tracks[1:] // Skip previous track
+	if current, err := radioPlaylist.Current(); err != nil {
+		log.Printf("Failed to get currently playing song: %s", err)
+	} else {
+		if meta, err := current.PositionMeta(); err != nil {
+			log.Printf("Failed to get metadata: %s", err)
+		} else {
+			log.Printf("%s is currently playing: %s - %s [%s] [%s]",
+				sync.Radio.Name, current.Artist, current.Track,
+				meta.PositionString(),
+				meta.PositionSymbol(10, true))
+		}
+	}
 	log.Printf("Looking for %+v", radioTracks)
 
 	for _, t := range radioTracks {
