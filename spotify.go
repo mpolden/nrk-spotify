@@ -51,10 +51,10 @@ type NewPlaylist struct {
 }
 
 type SearchResult struct {
-	Tracks Tracks `json:"tracks"`
+	Tracks SearchTracks `json:"tracks"`
 }
 
-type Tracks struct {
+type SearchTracks struct {
 	Items []Track `json:"items"`
 }
 
