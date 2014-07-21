@@ -3,10 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mitchellh/colorstring"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -106,6 +109,30 @@ func (track *RadioTrack) PositionString() (string, error) {
 			floor(position.Seconds()), floor(duration.Minutes()),
 			floor(duration.Seconds())),
 		nil
+}
+
+func (track *RadioTrack) PositionSymbol(scale int, colorize bool) (string,
+	error) {
+	position, err := track.Position()
+	if err != nil {
+		return "", nil
+	}
+	duration, err := track.Duration()
+	if err != nil {
+		return "", nil
+	}
+	ratio := position.Seconds() / duration.Seconds()
+
+	count := int(math.Ceil(ratio * float64(scale)))
+	elapsed := strings.Repeat("=", count)
+	remaining := strings.Repeat("-", (1 * scale) - count)
+
+	if colorize {
+		elapsed = fmt.Sprintf(colorstring.Color("[green]%s[reset]"),
+			elapsed)
+	}
+
+	return elapsed + remaining, nil
 }
 
 func (radio *NrkRadio) Playlist() (*RadioPlaylist, error) {
