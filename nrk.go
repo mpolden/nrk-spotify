@@ -131,16 +131,22 @@ func (meta *PositionMeta) PositionString() string {
 func (meta *PositionMeta) PositionSymbol(scale int, colorize bool) string {
 	ratio := meta.Position.Seconds() / meta.Duration.Seconds()
 
-	count := int(math.Ceil(ratio * float64(scale)))
-	elapsed := strings.Repeat("=", count)
-	remaining := strings.Repeat("-", (1*scale)-count)
-
-	if colorize {
-		elapsed = fmt.Sprintf(colorstring.Color("[green]%s[reset]"),
-			elapsed)
+	elapsed := scale
+	remaining := 0
+	if ratio < 1 {
+		elapsed = int(math.Ceil(ratio * float64(scale)))
+		remaining = (1 * scale) - elapsed
 	}
 
-	return elapsed + remaining
+	elapsedSymbol := strings.Repeat("=", elapsed)
+	remainingSymbol := strings.Repeat("-", remaining)
+
+	if colorize {
+		elapsedSymbol = fmt.Sprintf(
+			colorstring.Color("[green]%s[reset]"), elapsedSymbol)
+	}
+
+	return elapsedSymbol + remainingSymbol
 }
 
 func (radio *NrkRadio) Playlist() (*RadioPlaylist, error) {

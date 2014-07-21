@@ -96,3 +96,26 @@ func TestPositionSymbol(t *testing.T) {
 	f(10, "=---------")
 	f(20, "==------------------")
 }
+
+func TestPositionSymbolRatioGreaterThanOne(t *testing.T) {
+	track := testTrack()
+	// Start time after track duration
+	track.StartTime_ = fmt.Sprintf("/Date(%d000+0200)/",
+		time.Now().Unix()-371)
+
+	meta, err := track.PositionMeta()
+	if err != nil {
+		t.Fatalf("Failed to create metadata: %s", err)
+	}
+
+	symbol := meta.PositionSymbol(10, false)
+	if len(symbol) != 10 {
+		t.Fatalf("Expected string of length 10, got: %d",
+			len(symbol))
+	}
+	expected := "=========="
+	if symbol != expected {
+		t.Fatalf("Expected %s, got %s", expected, symbol)
+	}
+
+}
