@@ -19,7 +19,6 @@ type Args struct {
 	TokenFile    string
 	ClientId     string
 	ClientSecret string
-	Scope        string
 	RadioName    string
 	ApiUrl       string
 	Interval     time.Duration
@@ -43,8 +42,6 @@ func makeArgs(args map[string]interface{}) Args {
 		radioName = args["<radio-name>"].(string)
 		apiUrl = args["<api-url>"].(string)
 	}
-	scope := "playlist-modify playlist-modify-private " +
-		"playlist-read-private"
 	interval, err := strconv.Atoi(intervalOpt)
 	if err != nil || interval < 1 {
 		fmt.Println("--interval must be an positive integer")
@@ -57,7 +54,6 @@ func makeArgs(args map[string]interface{}) Args {
 		TokenFile:    tokenFile,
 		ClientId:     clientId,
 		ClientSecret: clientSecret,
-		Scope:        scope,
 		RadioName:    radioName,
 		ApiUrl:       apiUrl,
 		Interval:     time.Duration(interval),
@@ -98,7 +94,6 @@ Options:
 			ClientSecret: args.ClientSecret,
 			CallbackUrl:  args.CallbackUrl(),
 			TokenFile:    args.TokenFile,
-			Scope:        args.Scope,
 		}
 		http.HandleFunc("/login", spotifyAuth.login)
 		http.HandleFunc("/callback", spotifyAuth.callback)

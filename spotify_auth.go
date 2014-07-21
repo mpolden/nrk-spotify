@@ -12,12 +12,13 @@ import (
 )
 
 const stateKey string = "spotify_auth_state"
+const scope string = "playlist-modify playlist-modify-private " +
+	"playlist-read-private"
 
 type SpotifyAuth struct {
 	ClientId     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 	CallbackUrl  string `json:"callback_url"`
-	Scope        string `json:"scope"`
 	TokenFile    string `json:"token_file"`
 }
 
@@ -49,7 +50,7 @@ func (auth *SpotifyAuth) login(w http.ResponseWriter, r *http.Request) {
 	params := url.Values{
 		"response_type": {"code"},
 		"client_id":     {auth.ClientId},
-		"scope":         {auth.Scope},
+		"scope":         {scope},
 		"redirect_uri":  {auth.CallbackUrl},
 		"state":         {state},
 	}
