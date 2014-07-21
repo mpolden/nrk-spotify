@@ -61,10 +61,12 @@ func TestPositionString(t *testing.T) {
 	thirtySecsAgo := time.Now().Unix() - 30
 	track.StartTime_ = fmt.Sprintf("/Date(%d000+0200)/", thirtySecsAgo)
 
-	position, err := track.PositionString()
+	meta, err := track.PositionMeta()
 	if err != nil {
-		t.Fatalf("Failed to get position: %s", err)
+		t.Fatalf("Failed to create metadata: %s", err)
 	}
+
+	position := meta.PositionString()
 	expected := "00:30/06:10"
 	if position != expected {
 		t.Fatalf("Expected %s, got %s", expected, position)
@@ -76,11 +78,13 @@ func TestPositionSymbol(t *testing.T) {
 	thirtySecsAgo := time.Now().Unix() - 30
 	track.StartTime_ = fmt.Sprintf("/Date(%d000+0200)/", thirtySecsAgo)
 
+	meta, err := track.PositionMeta()
+	if err != nil {
+		t.Fatalf("Failed to create metadata: %s", err)
+	}
+
 	f := func(scale int, expected string) {
-		symbol, err := track.PositionSymbol(scale, false)
-		if err != nil {
-			t.Fatalf("Failed to get position: %s", err)
-		}
+		symbol := meta.PositionSymbol(scale, false)
 		if len(symbol) != scale {
 			t.Fatalf("Expected string of length 12, got: %d",
 				len(symbol))

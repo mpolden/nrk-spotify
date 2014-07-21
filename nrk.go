@@ -30,6 +30,11 @@ type RadioTrack struct {
 	Duration_  string `json:"duration"`
 }
 
+type PositionMeta struct {
+	Position time.Duration
+	Duration time.Duration
+}
+
 func (radio *NrkRadio) Url() string {
 	return fmt.Sprintf(
 		"http://v7.psapi.nrk.no/channels/%s/liveelements/now", radio.Id)
@@ -93,46 +98,45 @@ func (track *RadioTrack) Position() (time.Duration, error) {
 	return time.Now().Truncate(1 * time.Second).Sub(startTime), nil
 }
 
-func (track *RadioTrack) PositionString() (string, error) {
+func (track *RadioTrack) PositionMeta() (PositionMeta, error) {
 	position, err := track.Position()
 	if err != nil {
-		return "", err
+		return PositionMeta{}, err
 	}
 	duration, err := track.Duration()
 	if err != nil {
-		return "", err
+		return PositionMeta{}, err
 	}
+	return PositionMeta{
+		Position: position,
+		Duration: duration,
+	}, nil
+}
+
+func (meta *PositionMeta) PositionString() string {
 	floor := func(n float64) int {
 		return int(n) % 60
 	}
-	return fmt.Sprintf("%02d:%02d/%02d:%02d", floor(position.Minutes()),
-			floor(position.Seconds()), floor(duration.Minutes()),
-			floor(duration.Seconds())),
-		nil
+	return fmt.Sprintf("%02d:%02d/%02d:%02d",
+		floor(meta.Position.Minutes()),
+		floor(meta.Position.Seconds()),
+		floor(meta.Duration.Minutes()),
+		floor(meta.Duration.Seconds()))
 }
 
-func (track *RadioTrack) PositionSymbol(scale int, colorize bool) (string,
-	error) {
-	position, err := track.Position()
-	if err != nil {
-		return "", nil
-	}
-	duration, err := track.Duration()
-	if err != nil {
-		return "", nil
-	}
-	ratio := position.Seconds() / duration.Seconds()
+func (meta *PositionMeta) PositionSymbol(scale int, colorize bool) string {
+	ratio := meta.Position.Seconds() / meta.Duration.Seconds()
 
 	count := int(math.Ceil(ratio * float64(scale)))
 	elapsed := strings.Repeat("=", count)
-	remaining := strings.Repeat("-", (1 * scale) - count)
+	remaining := strings.Repeat("-", (1*scale)-count)
 
 	if colorize {
 		elapsed = fmt.Sprintf(colorstring.Color("[green]%s[reset]"),
 			elapsed)
 	}
 
-	return elapsed + remaining, nil
+	return elapsed + remaining
 }
 
 func (radio *NrkRadio) Playlist() (*RadioPlaylist, error) {
