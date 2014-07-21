@@ -113,6 +113,10 @@ func (track *RadioTrack) PositionMeta() (PositionMeta, error) {
 	}, nil
 }
 
+func (track *RadioTrack) String() string {
+	return fmt.Sprintf("%s - %s", track.Artist, track.Track)
+}
+
 func (meta *PositionMeta) PositionString() string {
 	floor := func(n float64) int {
 		return int(n) % 60

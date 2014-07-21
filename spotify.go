@@ -349,3 +349,7 @@ func (spotify *Spotify) addTracks(playlist *Playlist, tracks []Track) error {
 func (spotify *Spotify) addTrack(playlist *Playlist, track *Track) error {
 	return spotify.addTracks(playlist, []Track{*track})
 }
+
+func (track *Track) String() string {
+	return fmt.Sprintf("%s [%s]", track.Name, track.Id)
+}
