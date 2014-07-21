@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/mitchellh/colorstring"
 	"log"
 	"time"
 )
@@ -31,6 +32,10 @@ func (sync *SyncServer) Serve() {
 	}
 }
 
+func logColorf(format string, v ...interface{}) {
+	log.Printf(colorstring.Color(format), v...)
+}
+
 func (sync *SyncServer) run() error {
 	radioPlaylist, err := sync.Radio.Playlist()
 	if err != nil {
@@ -39,10 +44,11 @@ func (sync *SyncServer) run() error {
 
 	radioTracks := radioPlaylist.Tracks[1:] // Skip previous track
 	if current, err := radioPlaylist.Current(); err != nil {
-		log.Printf("Failed to get currently playing song: %s", err)
+		logColorf("[red]Failed to get current track: %s[reset]", err)
 	} else {
 		if meta, err := current.PositionMeta(); err != nil {
-			log.Printf("Failed to get metadata: %s", err)
+			logColorf("[red]Failed to parse metadata: %s[reset]",
+				err)
 		} else {
 			log.Printf("%s is currently playing: %s - %s [%s] [%s]",
 				sync.Radio.Name, current.Artist, current.Track,
@@ -50,35 +56,40 @@ func (sync *SyncServer) run() error {
 				meta.PositionSymbol(10, true))
 		}
 	}
-	log.Printf("Looking for %+v", radioTracks)
 
 	for _, t := range radioTracks {
+		logColorf("[blue]Searching for %s[reset]", t.String())
 		if !t.IsMusic() {
-			log.Printf("Not music, skipping: %+v", t)
+			logColorf("[green]Not music, skipping: %s[reset]",
+				t.String())
 			continue
 		}
 		track, err := sync.Spotify.searchArtistTrack(t.Artist, t.Track)
 		if err != nil {
-			log.Printf("No result for %+v: %s", t, err)
+			logColorf("[red]No result for %s: %s[reset]",
+				t.String(), err)
 			continue
 		}
 		if sync.Playlist.contains(*track) {
-			log.Printf("Already added: %+v", track)
+			logColorf("[yellow]Already added: %s[reset]",
+				track.String())
 			continue
 		}
 		if err = sync.Spotify.addTrack(sync.Playlist,
 			track); err != nil {
-			log.Printf("Failed to add %+v: %s", track, err)
+			logColorf("[red]Failed to add %s: %s[reset]",
+				track.String(), err)
 			continue
 		}
 		// Refresh playlist
 		playlist, err := sync.Spotify.playlistById(sync.Playlist.Id)
 		if err != nil {
-			log.Printf("Failed to refresh playlist: %s", err)
+			logColorf("[red]Failed to refresh playlist: %s[reset]",
+				err)
 			continue
 		}
 		sync.Playlist = playlist
-		log.Printf("Added: %+v\n", track)
+		logColorf("[green]Added track: %s[reset]", track.String())
 	}
 	return nil
 }
