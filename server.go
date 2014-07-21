@@ -9,12 +9,13 @@ type SyncServer struct {
 	Spotify  *Spotify
 	Playlist *Playlist
 	Radio    *NrkRadio
+	Interval time.Duration
 }
 
 func (sync *SyncServer) Serve() {
-	ticker := time.NewTicker(3 * time.Minute)
-	quit := make(chan struct{})
+	ticker := time.NewTicker(sync.Interval * time.Minute)
 
+	log.Printf("Server started. Syncing every %d minute(s)", sync.Interval)
 	f := func() {
 		log.Print("Running sync")
 		if err := sync.run(); err != nil {
@@ -26,10 +27,6 @@ func (sync *SyncServer) Serve() {
 		select {
 		case <-ticker.C:
 			f()
-		case <-quit:
-			log.Print("Shutting down")
-			ticker.Stop()
-			return
 		}
 	}
 }
