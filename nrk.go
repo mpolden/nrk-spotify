@@ -9,7 +9,7 @@ import (
 
 type NrkRadio struct {
 	Name string
-	Url  string
+	Id   string
 }
 
 type RadioPlaylist struct {
@@ -20,6 +20,11 @@ type RadioTrack struct {
 	Track  string `json:"title"`
 	Artist string `json:"description"`
 	Type   string `json:"type"`
+}
+
+func (radio *NrkRadio) Url() string {
+	return fmt.Sprintf(
+		"http://v7.psapi.nrk.no/channels/%s/liveelements/now", radio.Id)
 }
 
 func (playlist *RadioPlaylist) Previous() (*RadioTrack, error) {
@@ -48,7 +53,7 @@ func (track *RadioTrack) IsMusic() bool {
 }
 
 func (radio *NrkRadio) Playlist() (*RadioPlaylist, error) {
-	resp, err := http.Get(radio.Url)
+	resp, err := http.Get(radio.Url())
 	if err != nil {
 		return nil, err
 	}

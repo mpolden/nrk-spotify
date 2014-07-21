@@ -20,11 +20,11 @@ type Args struct {
 	ClientId     string
 	ClientSecret string
 	RadioName    string
-	ApiUrl       string
+	RadioId      string
 	Interval     time.Duration
 }
 
-func makeArgs(args map[string]interface{}) Args {
+func makeArgs(args map[string]interface{}) (Args, error) {
 	auth := args["auth"].(bool)
 	server := args["server"].(bool)
 	listen := args["--listen"].(string)
@@ -33,19 +33,18 @@ func makeArgs(args map[string]interface{}) Args {
 	clientId := ""
 	clientSecret := ""
 	radioName := ""
-	apiUrl := ""
+	radioId := ""
 	if auth {
 		clientId = args["<client-id>"].(string)
 		clientSecret = args["<client-secret>"].(string)
 	}
 	if server {
 		radioName = args["<radio-name>"].(string)
-		apiUrl = args["<api-url>"].(string)
+		radioId = args["<radio-id>"].(string)
 	}
 	interval, err := strconv.Atoi(intervalOpt)
 	if err != nil || interval < 1 {
-		fmt.Println("--interval must be an positive integer")
-		os.Exit(1)
+		fmt.Errorf("--interval must be an positive integer")
 	}
 	return Args{
 		Auth:         auth,
@@ -55,9 +54,9 @@ func makeArgs(args map[string]interface{}) Args {
 		ClientId:     clientId,
 		ClientSecret: clientSecret,
 		RadioName:    radioName,
-		ApiUrl:       apiUrl,
+		RadioId:      radioId,
 		Interval:     time.Duration(interval),
-	}
+	}, nil
 }
 
 func (args *Args) Url() string {
@@ -76,7 +75,7 @@ func main() {
 
 Usage:
   nrk-spotify auth [-l <address>] [-f <token-file>] <client-id> <client-secret>
-  nrk-spotify server [-f <token-file>] [-i <interval>] <radio-name> <api-url>
+  nrk-spotify server [-f <token-file>] [-i <interval>] <radio-name> <radio-id>
   nrk-spotify -h | --help
 
 Options:
@@ -86,7 +85,11 @@ Options:
   -i --interval=<minutes>       Polling interval [default: 5]`
 
 	arguments, _ := docopt.Parse(usage, nil, true, "", false)
-	args := makeArgs(arguments)
+	args, err := makeArgs(arguments)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	if args.Auth {
 		spotifyAuth := SpotifyAuth{
@@ -126,7 +129,7 @@ Options:
 
 		radio := NrkRadio{
 			Name: args.RadioName,
-			Url:  args.ApiUrl,
+			Id:   args.RadioId,
 		}
 		spotifyPlaylist, err := token.getOrCreatePlaylist(radio.Name)
 		if err != nil {
