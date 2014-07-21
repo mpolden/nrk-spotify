@@ -64,6 +64,10 @@ func (sync *SyncServer) run() error {
 		}
 		// Refresh playlist
 		playlist, err := sync.Spotify.playlistById(sync.Playlist.Id)
+		if err != nil {
+			log.Printf("Failed to refresh playlist: %s", err)
+			continue
+		}
 		sync.Playlist = playlist
 		log.Printf("Added: %+v\n", track)
 	}
