@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -37,5 +38,35 @@ func TestDuration(t *testing.T) {
 		time.Duration(6*time.Minute)
 	if duration != expected {
 		t.Fatalf("Expected %s, got %s", expected, duration)
+	}
+}
+
+func TestPosition(t *testing.T) {
+	track := testTrack()
+	thirtySecsAgo := time.Now().Unix() - 30
+	track.StartTime_ = fmt.Sprintf("/Date(%d000+0200)/", thirtySecsAgo)
+
+	position, err := track.Position()
+	if err != nil {
+		t.Fatalf("Failed to get position: %s", err)
+	}
+	expected := time.Duration(30 * time.Second)
+	if position != expected {
+		t.Fatalf("Expected %s, got %s", expected, position)
+	}
+}
+
+func TestPositionString(t *testing.T) {
+	track := testTrack()
+	thirtySecsAgo := time.Now().Unix() - 30
+	track.StartTime_ = fmt.Sprintf("/Date(%d000+0200)/", thirtySecsAgo)
+
+	position, err := track.PositionString()
+	if err != nil {
+		t.Fatalf("Failed to get position: %s", err)
+	}
+	expected := "00:30/06:10"
+	if position != expected {
+		t.Fatalf("Expected %s, got %s", expected, position)		
 	}
 }

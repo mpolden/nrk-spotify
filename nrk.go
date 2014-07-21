@@ -82,6 +82,32 @@ func (track *RadioTrack) Duration() (time.Duration, error) {
 	return time.Duration(0), fmt.Errorf("Could not parse duration")
 }
 
+func (track *RadioTrack) Position() (time.Duration, error) {
+	startTime, err := track.StartTime()
+	if err != nil {
+		return time.Duration(0), err
+	}
+	return time.Now().Truncate(1 * time.Second).Sub(startTime), nil
+}
+
+func (track *RadioTrack) PositionString() (string, error) {
+	position, err := track.Position()
+	if err != nil {
+		return "", err
+	}
+	duration, err := track.Duration()
+	if err != nil {
+		return "", err
+	}
+	floor := func(n float64) int {
+		return int(n) % 60
+	}
+	return fmt.Sprintf("%02d:%02d/%02d:%02d", floor(position.Minutes()),
+			floor(position.Seconds()), floor(duration.Minutes()),
+			floor(duration.Seconds())),
+		nil
+}
+
 func (radio *NrkRadio) Playlist() (*RadioPlaylist, error) {
 	resp, err := http.Get(radio.Url())
 	if err != nil {
