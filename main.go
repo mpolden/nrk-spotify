@@ -109,30 +109,23 @@ Options:
 		http.ListenAndServe(args.Listen, nil)
 	}
 	if args.Server {
-		token, err := ReadToken(args.TokenFile)
+		spotify, err := ReadToken(args.TokenFile)
 		if err != nil {
 			log.Fatalf("Failed to read file: %s", err)
 		}
 		// Set and save current user if profile is empty
-		if token.Profile.Id == "" {
-			profile, err := token.CurrentUser()
-			if err != nil {
-				log.Fatalf("Failed to get current user: %s\n",
+		if spotify.Profile.Id == "" {
+			if err := spotify.SetCurrentUser(); err != nil {
+				log.Fatalf("Failed to set current user: %s\n",
 					err)
-
-			}
-			token.Profile = *profile
-			if err := token.Save(token.Auth.TokenFile); err != nil {
-				log.Fatalf("Failed to save token: %s\n", err)
 			}
 		}
-
 		radio := Radio{
 			Name: args.RadioName,
 			Id:   args.RadioId,
 		}
 		server := SyncServer{
-			Spotify:  token,
+			Spotify:  spotify,
 			Radio:    &radio,
 			Interval: args.Interval,
 		}

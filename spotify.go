@@ -357,3 +357,15 @@ func (spotify *Spotify) AddTrack(playlist *Playlist, track *Track) error {
 func (track *Track) String() string {
 	return fmt.Sprintf("%s (%s)", track.Name, track.Id)
 }
+
+func (spotify *Spotify) SetCurrentUser() error {
+	profile, err := spotify.CurrentUser()
+	if err != nil {
+		return err
+	}
+	spotify.Profile = *profile
+	if err := spotify.Save(spotify.Auth.TokenFile); err != nil {
+		return err
+	}
+	return nil
+}
