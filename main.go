@@ -3,71 +3,52 @@ package main
 import (
 	"fmt"
 	"github.com/docopt/docopt-go"
-	"github.com/mitchellh/colorstring"
 	"log"
-	"net/http"
-	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
-type Args struct {
-	Auth         bool
-	Server       bool
-	Listen       string
-	TokenFile    string
-	ClientId     string
-	ClientSecret string
-	RadioName    string
-	RadioId      string
-	Interval     time.Duration
-}
-
-func makeArgs(args map[string]interface{}) (*Args, error) {
-	auth := args["auth"].(bool)
-	server := args["server"].(bool)
+func makeSpotifyAuth(args map[string]interface{}) *SpotifyAuth {
+	clientId := args["<client-id>"].(string)
+	clientSecret := args["<client-secret>"].(string)
 	listen := args["--listen"].(string)
 	tokenFile := args["--token-file"].(string)
+	return &SpotifyAuth{
+		ClientId:     clientId,
+		ClientSecret: clientSecret,
+		TokenFile:    tokenFile,
+		listen:       listen,
+	}
+}
+
+func makeServer(args map[string]interface{}) (*SyncServer, error) {
+	radioName := args["<radio-name>"].(string)
+	radioId := args["<radio-id>"].(string)
+	tokenFile := args["--token-file"].(string)
 	intervalOpt := args["--interval"].(string)
-	clientId := ""
-	clientSecret := ""
-	radioName := ""
-	radioId := ""
-	if auth {
-		clientId = args["<client-id>"].(string)
-		clientSecret = args["<client-secret>"].(string)
-	}
-	if server {
-		radioName = args["<radio-name>"].(string)
-		radioId = args["<radio-id>"].(string)
-	}
 	interval, err := strconv.Atoi(intervalOpt)
 	if err != nil || interval < 1 {
 		return nil, fmt.Errorf("--interval must be an positive integer")
 	}
-	return &Args{
-		Auth:         auth,
-		Listen:       listen,
-		Server:       server,
-		TokenFile:    tokenFile,
-		ClientId:     clientId,
-		ClientSecret: clientSecret,
-		RadioName:    radioName,
-		RadioId:      radioId,
-		Interval:     time.Duration(interval),
-	}, nil
-}
-
-func (args *Args) Url() string {
-	if strings.HasPrefix(args.Listen, ":") {
-		return "http://localhost" + args.Listen
+	spotify, err := ReadToken(tokenFile)
+	if err != nil {
+		return nil, err
 	}
-	return "http://" + args.Listen
-}
-
-func (args *Args) CallbackUrl() string {
-	return args.Url() + "/callback"
+	// Set and save current user if profile is empty
+	if spotify.Profile.Id == "" {
+		if err := spotify.SetCurrentUser(); err != nil {
+			return nil, err
+		}
+	}
+	radio := Radio{
+		Name: radioName,
+		Id:   radioId,
+	}
+	return &SyncServer{
+		Spotify:  spotify,
+		Radio:    &radio,
+		Interval: time.Duration(interval),
+	}, nil
 }
 
 func main() {
@@ -85,49 +66,17 @@ Options:
   -i --interval=<minutes>       Polling interval [default: 5]`
 
 	arguments, _ := docopt.Parse(usage, nil, true, "", false)
-	args, err := makeArgs(arguments)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	auth := arguments["auth"].(bool)
+	server := arguments["server"].(bool)
 
-	if args.Auth {
-		spotifyAuth := SpotifyAuth{
-			ClientId:     args.ClientId,
-			ClientSecret: args.ClientSecret,
-			CallbackUrl:  args.CallbackUrl(),
-			TokenFile:    args.TokenFile,
-		}
-		http.HandleFunc("/login", spotifyAuth.Login)
-		http.HandleFunc("/callback", spotifyAuth.Callback)
-
-		fmt.Printf(colorstring.Color(
-			"Visit [green]%s/login[reset] to authenticate "+
-				"with Spotify.\n"), args.Url())
-		fmt.Printf(colorstring.Color(
-			"Listening at [green]%s[reset]\n"), args.Listen)
-		http.ListenAndServe(args.Listen, nil)
+	if auth {
+		spotifyAuth := makeSpotifyAuth(arguments)
+		spotifyAuth.Serve()
 	}
-	if args.Server {
-		spotify, err := ReadToken(args.TokenFile)
+	if server {
+		server, err := makeServer(arguments)
 		if err != nil {
-			log.Fatalf("Failed to read file: %s", err)
-		}
-		// Set and save current user if profile is empty
-		if spotify.Profile.Id == "" {
-			if err := spotify.SetCurrentUser(); err != nil {
-				log.Fatalf("Failed to set current user: %s\n",
-					err)
-			}
-		}
-		radio := Radio{
-			Name: args.RadioName,
-			Id:   args.RadioId,
-		}
-		server := SyncServer{
-			Spotify:  spotify,
-			Radio:    &radio,
-			Interval: args.Interval,
+			log.Fatalf("Failed to initialize server: %s", err)
 		}
 		server.Serve()
 	}
