@@ -74,7 +74,7 @@ Options:
   -l --listen=<address>    Auth server listening address [default: :8080]
   -i --interval=<minutes>  Polling interval [default: 5]
   -c --cache-size=<max>    Max entries to keep in cache [default: 100]
-  -a --adaptive            Automatically determine sync interval.`
+  -a --adaptive            Automatically determine sync interval`
 
 	arguments, _ := docopt.Parse(usage, nil, true, "", false)
 	auth := arguments["auth"].(bool)

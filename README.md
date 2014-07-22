@@ -14,7 +14,7 @@ Listen to NRK radio channels in Spotify.
 
 Usage:
   nrk-spotify auth [-l <address>] [-f <file>] <client-id> <client-secret>
-  nrk-spotify server [-f <file>] [-i <interval>] [-c <max>] <name> <radio-id>
+  nrk-spotify server [-f <file>] [-i <interval>] [-a] [-c <max>] <name> <radio-id>
   nrk-spotify -h | --help
 
 Options:
@@ -23,6 +23,7 @@ Options:
   -l --listen=<address>    Auth server listening address [default: :8080]
   -i --interval=<minutes>  Polling interval [default: 5]
   -c --cache-size=<max>    Max entries to keep in cache [default: 100]
+  -a --adaptive            Automatically determine sync interval
 ```
 
 ## Compiling and installing
@@ -30,6 +31,10 @@ Options:
 To compile you need the [Golang compiler](http://golang.org/doc/install).
 
 `$ PREFIX=/usr/local make build install`
+
+## Example output
+
+![Screenshot](docs/output.png)
 
 ## Tutorial
 
@@ -44,11 +49,11 @@ To compile you need the [Golang compiler](http://golang.org/doc/install).
 ```
 $ nrk-spotify auth CLIENT_ID CLIENT_SECRET
 Visit http://localhost:8080/login to authenticate with Spotify.
-Listening at :8080
 ```
 
 Use the link to authenticate with Spotify. If the authentication succeeds, a
-success message should be shown.
+success message should be shown. After authentication succeeds, the auth server
+can be stopped with `Ctrl+C`.
 
 ### Run the sync server
 

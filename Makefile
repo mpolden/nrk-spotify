@@ -11,7 +11,7 @@ build:
 	$(GO) build -o nrk-spotify
 
 install:
-	cp -p bin/$(NAME) $(PREFIX)/bin/$(NAME)
+	cp -p $(NAME) $(PREFIX)/bin/$(NAME)
 
 test:
 	go test
