@@ -13,3 +13,6 @@ build:
 
 install:
 	cp -p bin/$(NAME) $(PREFIX)/bin/$(NAME)
+
+test:
+	go test
