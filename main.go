@@ -127,7 +127,7 @@ Options:
 			}
 		}
 
-		radio := NrkRadio{
+		radio := Radio{
 			Name: args.RadioName,
 			Id:   args.RadioId,
 		}

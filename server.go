@@ -8,7 +8,7 @@ import (
 
 type SyncServer struct {
 	Spotify  *Spotify
-	Radio    *NrkRadio
+	Radio    *Radio
 	Interval time.Duration
 	playlist *Playlist
 }
@@ -56,15 +56,15 @@ func (sync *SyncServer) run() error {
 	if current, err := radioPlaylist.Current(); err != nil {
 		logColorf("[red]Failed to get current track: %s[reset]", err)
 	} else {
-		if meta, err := current.PositionMeta(); err != nil {
+		if position, err := current.Position(); err != nil {
 			logColorf("[red]Failed to parse metadata: %s[reset]",
 				err)
 		} else {
 			logColorf("[cyan]%s is currently playing: %s - %s"+
 				"[reset] (%s) [%s]",
 				sync.Radio.Name, current.Artist, current.Track,
-				meta.PositionString(),
-				meta.PositionSymbol(10, true))
+				position.String(),
+				position.Symbol(10, true))
 		}
 	}
 

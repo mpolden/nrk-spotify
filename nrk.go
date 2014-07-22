@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-type NrkRadio struct {
+type Radio struct {
 	Name string
 	Id   string
 }
@@ -30,12 +30,12 @@ type RadioTrack struct {
 	Duration_  string `json:"duration"`
 }
 
-type PositionMeta struct {
+type Position struct {
 	Position time.Duration
 	Duration time.Duration
 }
 
-func (radio *NrkRadio) Url() string {
+func (radio *Radio) Url() string {
 	return fmt.Sprintf(
 		"http://v7.psapi.nrk.no/channels/%s/liveelements/now", radio.Id)
 }
@@ -86,24 +86,17 @@ func (track *RadioTrack) Duration() (time.Duration, error) {
 	return time.ParseDuration(duration)
 }
 
-func (track *RadioTrack) Position() (time.Duration, error) {
+func (track *RadioTrack) Position() (Position, error) {
 	startTime, err := track.StartTime()
 	if err != nil {
-		return time.Duration(0), err
-	}
-	return time.Now().Truncate(1 * time.Second).Sub(startTime), nil
-}
-
-func (track *RadioTrack) PositionMeta() (PositionMeta, error) {
-	position, err := track.Position()
-	if err != nil {
-		return PositionMeta{}, err
+		return Position{}, err
 	}
 	duration, err := track.Duration()
 	if err != nil {
-		return PositionMeta{}, err
+		return Position{}, err
 	}
-	return PositionMeta{
+	position := time.Now().Truncate(1 * time.Second).Sub(startTime)
+	return Position{
 		Position: position,
 		Duration: duration,
 	}, nil
@@ -113,19 +106,19 @@ func (track *RadioTrack) String() string {
 	return fmt.Sprintf("%s - %s", track.Artist, track.Track)
 }
 
-func (meta *PositionMeta) PositionString() string {
+func (position *Position) String() string {
 	floor := func(n float64) int {
 		return int(n) % 60
 	}
 	return fmt.Sprintf("%02d:%02d/%02d:%02d",
-		floor(meta.Position.Minutes()),
-		floor(meta.Position.Seconds()),
-		floor(meta.Duration.Minutes()),
-		floor(meta.Duration.Seconds()))
+		floor(position.Position.Minutes()),
+		floor(position.Position.Seconds()),
+		floor(position.Duration.Minutes()),
+		floor(position.Duration.Seconds()))
 }
 
-func (meta *PositionMeta) PositionSymbol(scale int, colorize bool) string {
-	ratio := meta.Position.Seconds() / meta.Duration.Seconds()
+func (position *Position) Symbol(scale int, colorize bool) string {
+	ratio := position.Position.Seconds() / position.Duration.Seconds()
 
 	elapsed := scale
 	remaining := 0
@@ -145,7 +138,7 @@ func (meta *PositionMeta) PositionSymbol(scale int, colorize bool) string {
 	return elapsedSymbol + remainingSymbol
 }
 
-func (radio *NrkRadio) Playlist() (*RadioPlaylist, error) {
+func (radio *Radio) Playlist() (*RadioPlaylist, error) {
 	resp, err := http.Get(radio.Url())
 	if err != nil {
 		return nil, err
