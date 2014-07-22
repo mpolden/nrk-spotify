@@ -25,6 +25,7 @@ func makeServer(args map[string]interface{}) (*SyncServer, error) {
 	radioName := args["<name>"].(string)
 	radioId := args["<radio-id>"].(string)
 	tokenFile := args["--token-file"].(string)
+	adaptive := args["--adaptive"].(bool)
 	intervalOpt := args["--interval"].(string)
 	interval, err := strconv.Atoi(intervalOpt)
 	if err != nil || interval < 1 {
@@ -53,7 +54,8 @@ func makeServer(args map[string]interface{}) (*SyncServer, error) {
 	return &SyncServer{
 		Spotify:   spotify,
 		Radio:     &radio,
-		Interval:  time.Duration(interval),
+		Interval:  time.Duration(interval) * time.Minute,
+		Adaptive:  adaptive,
 		CacheSize: cacheSize,
 	}, nil
 }
@@ -63,7 +65,7 @@ func main() {
 
 Usage:
   nrk-spotify auth [-l <address>] [-f <file>] <client-id> <client-secret>
-  nrk-spotify server [-f <file>] [-i <interval>] [-c <max>] <name> <radio-id>
+  nrk-spotify server [-f <file>] [-i <interval>] [-a] [-c <max>] <name> <radio-id>
   nrk-spotify -h | --help
 
 Options:
@@ -71,7 +73,8 @@ Options:
   -f --token-file=<file>   Token file to use [default: .token.json]
   -l --listen=<address>    Auth server listening address [default: :8080]
   -i --interval=<minutes>  Polling interval [default: 5]
-  -c --cache-size=<max>    Max entries to keep in cache [default: 100]`
+  -c --cache-size=<max>    Max entries to keep in cache [default: 100]
+  -a --adaptive            Automatically determine sync interval.`
 
 	arguments, _ := docopt.Parse(usage, nil, true, "", false)
 	auth := arguments["auth"].(bool)

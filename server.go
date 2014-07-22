@@ -11,6 +11,7 @@ type SyncServer struct {
 	Spotify   *Spotify
 	Radio     *Radio
 	Interval  time.Duration
+	Adaptive  bool
 	CacheSize int
 	playlist  *Playlist
 	cache     *lru.Cache
@@ -48,9 +49,7 @@ func (sync *SyncServer) initCache() {
 }
 
 func (sync *SyncServer) Serve() {
-	ticker := time.NewTicker(sync.Interval * time.Minute)
-
-	log.Printf("Server started. Syncing every %d minute(s)", sync.Interval)
+	log.Printf("Server started")
 	if err := sync.initPlaylist(); err != nil {
 		log.Fatalf("Failed to get or create playlist: %s", err)
 	}
@@ -60,25 +59,35 @@ func (sync *SyncServer) Serve() {
 	log.Printf("LRU cache initialized: %d/%d", sync.cache.Len(),
 		sync.cache.MaxEntries)
 
-	f := func() {
-		logColorf("[light_magenta]Running sync[reset]")
-		if err := sync.run(); err != nil {
-			log.Printf("Sync failed: %s\n", err)
-		}
+	if sync.Adaptive {
+		log.Print("Automatically determining interval")
+	} else {
+		log.Printf("Syncing every %s", sync.Interval)
 	}
-	f()
 	for {
 		select {
-		case <-ticker.C:
-			f()
+		case <-sync.scheduleRun():
 		}
 	}
 }
 
-func (sync *SyncServer) run() error {
+func (sync *SyncServer) scheduleRun() <-chan time.Time {
+	duration, err := sync.run()
+	if err != nil {
+		log.Printf("Sync failed: %s\n", err)
+		log.Print("Retrying in 1 minute")
+		return time.After(1 * time.Minute)
+	}
+	log.Printf("Next sync in %s", duration)
+	return time.After(duration)
+}
+
+func (sync *SyncServer) run() (time.Duration, error) {
+	logColorf("[light_magenta]Running sync[reset]")
+
 	radioPlaylist, err := sync.Radio.Playlist()
 	if err != nil {
-		return err
+		return time.Duration(0), err
 	}
 
 	radioTracks := radioPlaylist.Tracks[1:] // Skip previous track
@@ -97,6 +106,7 @@ func (sync *SyncServer) run() error {
 		}
 	}
 
+	added := 0
 	for _, t := range radioTracks {
 		logColorf("Searching for: %s", t.String())
 		if !t.IsMusic() {
@@ -113,6 +123,7 @@ func (sync *SyncServer) run() error {
 		if sync.isCached(track) {
 			logColorf("[yellow]Already added: %s[reset]",
 				track.String())
+			added++
 			continue
 		}
 		if err = sync.Spotify.AddTrack(sync.playlist,
@@ -122,9 +133,18 @@ func (sync *SyncServer) run() error {
 			continue
 		}
 		sync.addTrack(track)
+		added++
 		logColorf("[green]Added track: %s[reset]", track.String())
 	}
 	log.Printf("Cache size: %d/%d", sync.cache.Len(),
 		sync.cache.MaxEntries)
-	return nil
+	if !sync.Adaptive {
+		return sync.Interval, nil
+	}
+	if added != len(radioTracks) {
+		log.Printf("%d/%d tracks were added. Falling back to "+
+			" regular interval", added, len(radioTracks))
+		return sync.Interval, nil
+	}
+	return radioPlaylist.NextSync()
 }
