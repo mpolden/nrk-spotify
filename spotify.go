@@ -73,6 +73,10 @@ func (playlist *Playlist) contains(track Track) bool {
 	return false
 }
 
+func (playlist *Playlist) String() string {
+	return fmt.Sprintf("%s (%s)", playlist.Name, playlist.Id)
+}
+
 func (spotify *Spotify) update(newToken *Spotify) {
 	spotify.AccessToken = newToken.AccessToken
 	spotify.TokenType = newToken.TokenType
@@ -351,5 +355,5 @@ func (spotify *Spotify) addTrack(playlist *Playlist, track *Track) error {
 }
 
 func (track *Track) String() string {
-	return fmt.Sprintf("%s [%s]", track.Name, track.Id)
+	return fmt.Sprintf("%s (%s)", track.Name, track.Id)
 }

@@ -8,15 +8,29 @@ import (
 
 type SyncServer struct {
 	Spotify  *Spotify
-	Playlist *Playlist
 	Radio    *NrkRadio
 	Interval time.Duration
+	playlist *Playlist
+}
+
+func logColorf(format string, v ...interface{}) {
+	log.Printf(colorstring.Color(format), v...)
 }
 
 func (sync *SyncServer) Serve() {
 	ticker := time.NewTicker(sync.Interval * time.Minute)
 
-	log.Printf("Server started. Syncing every %d minute(s)", sync.Interval)
+	spotifyPlaylist, err := sync.Spotify.getOrCreatePlaylist(
+		sync.Radio.Name)
+	if err != nil {
+		log.Fatalf("Failed to get or create playlist: %s", err)
+	}
+	sync.playlist = spotifyPlaylist
+
+	logColorf("Server started. Syncing every [bold]%d[reset] minute(s)",
+		sync.Interval)
+	logColorf("[green]Tracks will be added to Spotify playlist: %s[reset]",
+		spotifyPlaylist.String())
 	f := func() {
 		logColorf("[light_magenta]Running sync[reset]")
 		if err := sync.run(); err != nil {
@@ -30,10 +44,6 @@ func (sync *SyncServer) Serve() {
 			f()
 		}
 	}
-}
-
-func logColorf(format string, v ...interface{}) {
-	log.Printf(colorstring.Color(format), v...)
 }
 
 func (sync *SyncServer) run() error {
@@ -51,7 +61,7 @@ func (sync *SyncServer) run() error {
 				err)
 		} else {
 			logColorf("[cyan]%s is currently playing: %s - %s"+
-				"[reset] [%s] [%s]",
+				"[reset] (%s) [%s]",
 				sync.Radio.Name, current.Artist, current.Track,
 				meta.PositionString(),
 				meta.PositionSymbol(10, true))
@@ -71,25 +81,25 @@ func (sync *SyncServer) run() error {
 				t.String(), err)
 			continue
 		}
-		if sync.Playlist.contains(*track) {
+		if sync.playlist.contains(*track) {
 			logColorf("[yellow]Already added: %s[reset]",
 				track.String())
 			continue
 		}
-		if err = sync.Spotify.addTrack(sync.Playlist,
+		if err = sync.Spotify.addTrack(sync.playlist,
 			track); err != nil {
 			logColorf("[red]Failed to add: %s (%s)[reset]",
 				track.String(), err)
 			continue
 		}
 		// Refresh playlist
-		playlist, err := sync.Spotify.playlistById(sync.Playlist.Id)
+		playlist, err := sync.Spotify.playlistById(sync.playlist.Id)
 		if err != nil {
 			logColorf("[red]Failed to refresh playlist: %s[reset]",
 				err)
 			continue
 		}
-		sync.Playlist = playlist
+		sync.playlist = playlist
 		logColorf("[green]Added track: %s[reset]", track.String())
 	}
 	return nil

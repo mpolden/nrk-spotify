@@ -131,13 +131,8 @@ Options:
 			Name: args.RadioName,
 			Id:   args.RadioId,
 		}
-		spotifyPlaylist, err := token.getOrCreatePlaylist(radio.Name)
-		if err != nil {
-			log.Fatalf("Failed to get or create playlist: %s", err)
-		}
 		server := SyncServer{
 			Spotify:  token,
-			Playlist: spotifyPlaylist,
 			Radio:    &radio,
 			Interval: args.Interval,
 		}
