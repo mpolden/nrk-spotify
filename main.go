@@ -98,8 +98,8 @@ Options:
 			CallbackUrl:  args.CallbackUrl(),
 			TokenFile:    args.TokenFile,
 		}
-		http.HandleFunc("/login", spotifyAuth.login)
-		http.HandleFunc("/callback", spotifyAuth.callback)
+		http.HandleFunc("/login", spotifyAuth.Login)
+		http.HandleFunc("/callback", spotifyAuth.Callback)
 
 		fmt.Printf(colorstring.Color(
 			"Visit [green]%s/login[reset] to authenticate "+
@@ -115,14 +115,14 @@ Options:
 		}
 		// Set and save current user if profile is empty
 		if token.Profile.Id == "" {
-			profile, err := token.currentUser()
+			profile, err := token.CurrentUser()
 			if err != nil {
 				log.Fatalf("Failed to get current user: %s\n",
 					err)
 
 			}
 			token.Profile = *profile
-			if err := token.save(token.Auth.TokenFile); err != nil {
+			if err := token.Save(token.Auth.TokenFile); err != nil {
 				log.Fatalf("Failed to save token: %s\n", err)
 			}
 		}

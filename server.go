@@ -20,7 +20,7 @@ func logColorf(format string, v ...interface{}) {
 func (sync *SyncServer) Serve() {
 	ticker := time.NewTicker(sync.Interval * time.Minute)
 
-	spotifyPlaylist, err := sync.Spotify.getOrCreatePlaylist(
+	spotifyPlaylist, err := sync.Spotify.GetOrCreatePlaylist(
 		sync.Radio.Name)
 	if err != nil {
 		log.Fatalf("Failed to get or create playlist: %s", err)
@@ -75,25 +75,25 @@ func (sync *SyncServer) run() error {
 				t.String())
 			continue
 		}
-		track, err := sync.Spotify.searchArtistTrack(t.Artist, t.Track)
+		track, err := sync.Spotify.SearchArtistTrack(t.Artist, t.Track)
 		if err != nil {
 			logColorf("[red]Not found: %s (%s)[reset]",
 				t.String(), err)
 			continue
 		}
-		if sync.playlist.contains(*track) {
+		if sync.playlist.Contains(*track) {
 			logColorf("[yellow]Already added: %s[reset]",
 				track.String())
 			continue
 		}
-		if err = sync.Spotify.addTrack(sync.playlist,
+		if err = sync.Spotify.AddTrack(sync.playlist,
 			track); err != nil {
 			logColorf("[red]Failed to add: %s (%s)[reset]",
 				track.String(), err)
 			continue
 		}
 		// Refresh playlist
-		playlist, err := sync.Spotify.playlistById(sync.playlist.Id)
+		playlist, err := sync.Spotify.PlaylistById(sync.playlist.Id)
 		if err != nil {
 			logColorf("[red]Failed to refresh playlist: %s[reset]",
 				err)

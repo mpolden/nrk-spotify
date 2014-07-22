@@ -37,7 +37,7 @@ func base64Rand(size uint) (string, error) {
 	return base64.StdEncoding.EncodeToString(b), nil
 }
 
-func (auth *SpotifyAuth) login(w http.ResponseWriter, r *http.Request) {
+func (auth *SpotifyAuth) Login(w http.ResponseWriter, r *http.Request) {
 	state, err := base64Rand(32)
 	if err != nil {
 		http.Error(w, "Failed to generate state value", 400)
@@ -84,7 +84,7 @@ func (auth *SpotifyAuth) getToken(code []string) (*Spotify, error) {
 	return &token, nil
 }
 
-func (auth *SpotifyAuth) callback(w http.ResponseWriter, r *http.Request) {
+func (auth *SpotifyAuth) Callback(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	state := params["state"]
 	cookie, _ := r.Cookie(stateKey)
@@ -104,7 +104,7 @@ func (auth *SpotifyAuth) callback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to retrieve token from Spotify", 400)
 		return
 	}
-	err = token.save(auth.TokenFile)
+	err = token.Save(auth.TokenFile)
 	if err != nil {
 		fmt.Printf("Failed to save token: %s\n", err)
 		http.Error(w, "Failed to save token", 400)

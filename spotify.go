@@ -64,7 +64,7 @@ type Track struct {
 	Uri  string `json:"uri"`
 }
 
-func (playlist *Playlist) contains(track Track) bool {
+func (playlist *Playlist) Contains(track Track) bool {
 	for _, item := range playlist.Tracks.Items {
 		if item.Track.Id == track.Id {
 			return true
@@ -136,7 +136,7 @@ func (spotify *Spotify) get(url string) ([]byte, error) {
 		if err := spotify.refreshToken(); err != nil {
 			return nil, err
 		}
-		if err := spotify.save(spotify.Auth.TokenFile); err != nil {
+		if err := spotify.Save(spotify.Auth.TokenFile); err != nil {
 			return nil, err
 		}
 		resp, err = spotify.doGet(url)
@@ -170,7 +170,7 @@ func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
 		if err := spotify.refreshToken(); err != nil {
 			return nil, err
 		}
-		if err := spotify.save(spotify.Auth.TokenFile); err != nil {
+		if err := spotify.Save(spotify.Auth.TokenFile); err != nil {
 			return nil, err
 		}
 		resp, err = spotify.doPost(url, body)
@@ -187,7 +187,7 @@ func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
 	return data, err
 }
 
-func (spotify *Spotify) save(filepath string) error {
+func (spotify *Spotify) Save(filepath string) error {
 	json, err := json.Marshal(spotify)
 	if err != nil {
 		return err
@@ -211,7 +211,7 @@ func ReadToken(filepath string) (*Spotify, error) {
 	return &spotify, nil
 }
 
-func (spotify *Spotify) currentUser() (*SpotifyProfile, error) {
+func (spotify *Spotify) CurrentUser() (*SpotifyProfile, error) {
 	url := "https://api.spotify.com/v1/me"
 	body, err := spotify.get(url)
 	if err != nil {
@@ -224,7 +224,7 @@ func (spotify *Spotify) currentUser() (*SpotifyProfile, error) {
 	return &profile, nil
 }
 
-func (spotify *Spotify) playlists() ([]Playlist, error) {
+func (spotify *Spotify) Playlists() ([]Playlist, error) {
 	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists",
 		spotify.Profile.Id)
 	body, err := spotify.get(url)
@@ -238,7 +238,7 @@ func (spotify *Spotify) playlists() ([]Playlist, error) {
 	return playlists.Items, nil
 }
 
-func (spotify *Spotify) playlistById(playlistId string) (*Playlist, error) {
+func (spotify *Spotify) PlaylistById(playlistId string) (*Playlist, error) {
 	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists/%s",
 		spotify.Profile.Id, playlistId)
 	body, err := spotify.get(url)
@@ -252,8 +252,8 @@ func (spotify *Spotify) playlistById(playlistId string) (*Playlist, error) {
 	return &playlist, nil
 }
 
-func (spotify *Spotify) playlist(name string) (*Playlist, error) {
-	playlists, err := spotify.playlists()
+func (spotify *Spotify) Playlist(name string) (*Playlist, error) {
+	playlists, err := spotify.Playlists()
 	if err != nil {
 		return nil, err
 	}
@@ -267,11 +267,11 @@ func (spotify *Spotify) playlist(name string) (*Playlist, error) {
 	if playlistId == "" {
 		return nil, nil
 	}
-	return spotify.playlistById(playlistId)
+	return spotify.PlaylistById(playlistId)
 }
 
-func (spotify *Spotify) getOrCreatePlaylist(name string) (*Playlist, error) {
-	existing, err := spotify.playlist(name)
+func (spotify *Spotify) GetOrCreatePlaylist(name string) (*Playlist, error) {
+	existing, err := spotify.Playlist(name)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +298,7 @@ func (spotify *Spotify) getOrCreatePlaylist(name string) (*Playlist, error) {
 	return &playlist, err
 }
 
-func (spotify *Spotify) search(query string, types string, limit uint) ([]Track,
+func (spotify *Spotify) Search(query string, types string, limit uint) ([]Track,
 	error) {
 	params := url.Values{
 		"q":     {query},
@@ -317,10 +317,10 @@ func (spotify *Spotify) search(query string, types string, limit uint) ([]Track,
 	return result.Tracks.Items, nil
 }
 
-func (spotify *Spotify) searchArtistTrack(artist string, track string) (*Track,
+func (spotify *Spotify) SearchArtistTrack(artist string, track string) (*Track,
 	error) {
 	query := fmt.Sprintf("artist:%s track:%s", artist, track)
-	tracks, err := spotify.search(query, "track", 1)
+	tracks, err := spotify.Search(query, "track", 1)
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +330,7 @@ func (spotify *Spotify) searchArtistTrack(artist string, track string) (*Track,
 	return nil, fmt.Errorf("0 matches")
 }
 
-func (spotify *Spotify) addTracks(playlist *Playlist, tracks []Track) error {
+func (spotify *Spotify) AddTracks(playlist *Playlist, tracks []Track) error {
 	url := fmt.Sprintf(
 		"https://api.spotify.com/v1/users/%s/playlists/%s/tracks",
 		spotify.Profile.Id, playlist.Id)
@@ -350,8 +350,8 @@ func (spotify *Spotify) addTracks(playlist *Playlist, tracks []Track) error {
 
 }
 
-func (spotify *Spotify) addTrack(playlist *Playlist, track *Track) error {
-	return spotify.addTracks(playlist, []Track{*track})
+func (spotify *Spotify) AddTrack(playlist *Playlist, track *Track) error {
+	return spotify.AddTracks(playlist, []Track{*track})
 }
 
 func (track *Track) String() string {
