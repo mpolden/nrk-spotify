@@ -8,8 +8,7 @@ fmt:
 	gofmt -w=true *.go
 
 build:
-	mkdir -p bin
-	$(GO) build -o bin/$(NAME)
+	$(GO) build -o nrk-spotify
 
 install:
 	cp -p bin/$(NAME) $(PREFIX)/bin/$(NAME)
