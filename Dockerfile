@@ -11,6 +11,6 @@ RUN apt-get -y install ca-certificates
 
 # Add app
 RUN mkdir /app
-ADD bin/nrk-spotify /app/nrk-spotify
+ADD nrk-spotify /app/nrk-spotify
 RUN chmod 0755 /app/nrk-spotify
 ENTRYPOINT ["/app/nrk-spotify"]
