@@ -143,5 +143,19 @@ func TestPositionSymbolRatioGreaterThanOne(t *testing.T) {
 	if symbol != expected {
 		t.Fatalf("Expected %s, got %s", expected, symbol)
 	}
+}
 
+func TestPositionLongerThanDuration(t *testing.T) {
+	track := testTrack()
+	track.StartTime_ = fmt.Sprintf("/Date(%d000+0200)/",
+		time.Now().Unix()-371)
+
+	position, err := track.Position()
+	if err != nil {
+		t.Fatalf("Failed to parse position: %s", err)
+	}
+	if position.Position > position.Duration {
+		t.Fatalf("Position should NOT be larger than duration: %s > %s",
+			position.Position, position.Duration)
+	}
 }

@@ -96,6 +96,12 @@ func (track *RadioTrack) Position() (Position, error) {
 		return Position{}, err
 	}
 	position := time.Now().Truncate(1 * time.Second).Sub(startTime)
+	// If position is longer than duration, just assume we're at the end
+	// This can happen if the API returns a incorrect startTime, or if the
+	// system time is incorrect
+	if position > duration {
+		position = duration
+	}
 	return Position{
 		Position: position,
 		Duration: duration,
