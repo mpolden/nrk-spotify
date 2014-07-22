@@ -8,11 +8,12 @@ import (
 )
 
 type SyncServer struct {
-	Spotify  *Spotify
-	Radio    *Radio
-	Interval time.Duration
-	playlist *Playlist
-	cache    *lru.Cache
+	Spotify   *Spotify
+	Radio     *Radio
+	Interval  time.Duration
+	CacheSize int
+	playlist  *Playlist
+	cache     *lru.Cache
 }
 
 func logColorf(format string, v ...interface{}) {
@@ -40,7 +41,7 @@ func (sync *SyncServer) initPlaylist() error {
 }
 
 func (sync *SyncServer) initCache() {
-	sync.cache = lru.New(100)
+	sync.cache = lru.New(sync.CacheSize)
 	for _, t := range sync.playlist.Tracks.Items {
 		sync.addTrack(&t.Track)
 	}
@@ -49,17 +50,16 @@ func (sync *SyncServer) initCache() {
 func (sync *SyncServer) Serve() {
 	ticker := time.NewTicker(sync.Interval * time.Minute)
 
-	logColorf("Server started. Syncing every [bold]%d[reset] minute(s)",
-		sync.Interval)
-
+	log.Printf("Server started. Syncing every %d minute(s)", sync.Interval)
 	if err := sync.initPlaylist(); err != nil {
 		log.Fatalf("Failed to get or create playlist: %s", err)
 	}
-	log.Printf("Playlist has %d entries", len(sync.playlist.Tracks.Items))
-	sync.initCache()
+	log.Printf("Spotify playlist: %s", sync.playlist.String())
 
-	logColorf("[green]Tracks will be added to Spotify playlist: %s[reset]",
-		sync.playlist.String())
+	sync.initCache()
+	log.Printf("LRU cache initialized: %d/%d", sync.cache.Len(),
+		sync.cache.MaxEntries)
+
 	f := func() {
 		logColorf("[light_magenta]Running sync[reset]")
 		if err := sync.run(); err != nil {
@@ -122,8 +122,9 @@ func (sync *SyncServer) run() error {
 			continue
 		}
 		sync.addTrack(track)
-		logColorf("[green]Added track: %s (cache size: %d)[reset]",
-			track.String(), sync.cache.Len())
+		logColorf("[green]Added track: %s[reset]", track.String())
 	}
+	log.Printf("Cache size: %d/%d", sync.cache.Len(),
+		sync.cache.MaxEntries)
 	return nil
 }

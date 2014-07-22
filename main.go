@@ -22,13 +22,19 @@ func makeSpotifyAuth(args map[string]interface{}) *SpotifyAuth {
 }
 
 func makeServer(args map[string]interface{}) (*SyncServer, error) {
-	radioName := args["<radio-name>"].(string)
+	radioName := args["<name>"].(string)
 	radioId := args["<radio-id>"].(string)
 	tokenFile := args["--token-file"].(string)
 	intervalOpt := args["--interval"].(string)
 	interval, err := strconv.Atoi(intervalOpt)
 	if err != nil || interval < 1 {
 		return nil, fmt.Errorf("--interval must be an positive integer")
+	}
+	cacheSizeOpt := args["--cache-size"].(string)
+	cacheSize, err := strconv.Atoi(cacheSizeOpt)
+	if err != nil || interval < 1 {
+		return nil, fmt.Errorf(
+			"--cache-size must be an positive integer")
 	}
 	spotify, err := ReadToken(tokenFile)
 	if err != nil {
@@ -45,9 +51,10 @@ func makeServer(args map[string]interface{}) (*SyncServer, error) {
 		Id:   radioId,
 	}
 	return &SyncServer{
-		Spotify:  spotify,
-		Radio:    &radio,
-		Interval: time.Duration(interval),
+		Spotify:   spotify,
+		Radio:     &radio,
+		Interval:  time.Duration(interval),
+		CacheSize: cacheSize,
 	}, nil
 }
 
@@ -55,15 +62,16 @@ func main() {
 	usage := `Listen to NRK radio channels in Spotify.
 
 Usage:
-  nrk-spotify auth [-l <address>] [-f <token-file>] <client-id> <client-secret>
-  nrk-spotify server [-f <token-file>] [-i <interval>] <radio-name> <radio-id>
+  nrk-spotify auth [-l <address>] [-f <file>] <client-id> <client-secret>
+  nrk-spotify server [-f <file>] [-i <interval>] [-c <max>] <name> <radio-id>
   nrk-spotify -h | --help
 
 Options:
-  -h --help                     Show help
-  -f --token-file=<token-file>  Token file to use [default: .token.json]
-  -l --listen=<address>         Auth server listening address [default: :8080]
-  -i --interval=<minutes>       Polling interval [default: 5]`
+  -h --help                Show help
+  -f --token-file=<file>   Token file to use [default: .token.json]
+  -l --listen=<address>    Auth server listening address [default: :8080]
+  -i --interval=<minutes>  Polling interval [default: 5]
+  -c --cache-size=<max>    Max entries to keep in cache [default: 100]`
 
 	arguments, _ := docopt.Parse(usage, nil, true, "", false)
 	auth := arguments["auth"].(bool)
