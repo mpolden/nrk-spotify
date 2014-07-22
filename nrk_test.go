@@ -48,7 +48,7 @@ func TestDurationWithoutSeconds(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse duration: %s", err)
 	}
-	expected := time.Duration(6*time.Minute)
+	expected := time.Duration(6 * time.Minute)
 	if duration != expected {
 		t.Fatalf("Expected %s, got %s", expected, duration)
 	}
@@ -61,7 +61,7 @@ func TestDurationWithoutMinutes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse duration: %s", err)
 	}
-	expected := time.Duration(10*time.Second)
+	expected := time.Duration(10 * time.Second)
 	if duration != expected {
 		t.Fatalf("Expected %s, got %s", expected, duration)
 	}
