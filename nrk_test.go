@@ -159,3 +159,41 @@ func TestPositionLongerThanDuration(t *testing.T) {
 			position.Position, position.Duration)
 	}
 }
+
+func TestPositionNegative(t *testing.T) {
+	track := testTrack()
+	track.StartTime_ = fmt.Sprintf("/Date(%d000+0200)/",
+		time.Now().Unix()+370)
+	position, err := track.Position()
+	if err != nil {
+		t.Fatalf("Failed to parse position: %s", err)
+	}
+	if position.Position != 0 {
+		t.Fatalf("Expected 0, got %s", position.Position)
+	}
+}
+
+func TestNextSync(t *testing.T) {
+	currentTrack := testTrack()
+	// 42 seconds into current track
+	currentTrack.StartTime_ = fmt.Sprintf("/Date(%d000+0200)/",
+		time.Now().Unix()-42)
+
+	// Next track is 3m 37s long
+	nextTrack := testTrack()
+	nextTrack.Duration_ = "PT3M37S"
+
+	playlist := RadioPlaylist{
+		Tracks: []RadioTrack{RadioTrack{}, currentTrack, nextTrack},
+	}
+
+	nextSync, err := playlist.NextSync()
+	if err != nil {
+		t.Fatalf("Failed to find next sync time: %s", err)
+	}
+	expected := time.Duration(9*time.Minute) +
+		time.Duration(5*time.Second)
+	if nextSync != expected {
+		t.Fatalf("Expected %s, got %s", expected, nextSync)
+	}
+}

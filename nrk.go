@@ -102,6 +102,10 @@ func (track *RadioTrack) Position() (Position, error) {
 	if position > duration {
 		position = duration
 	}
+	// If position is negative, assume we're at the beginning
+	if position < 0 {
+		position = 0
+	}
 	return Position{
 		Position: position,
 		Duration: duration,
@@ -128,7 +132,7 @@ func (position *Position) Symbol(scale int, colorize bool) string {
 
 	elapsed := scale
 	remaining := 0
-	if ratio < 1 {
+	if ratio > 0 && ratio < 1 {
 		elapsed = int(math.Ceil(ratio * float64(scale)))
 		remaining = (1 * scale) - elapsed
 	}
@@ -142,6 +146,27 @@ func (position *Position) Symbol(scale int, colorize bool) string {
 	}
 
 	return elapsedSymbol + remainingSymbol
+}
+
+func (playlist *RadioPlaylist) NextSync() (time.Duration, error) {
+	current, err := playlist.Current()
+	if err != nil {
+		return time.Duration(0), err
+	}
+	next, err := playlist.Next()
+	if err != nil {
+		return time.Duration(0), err
+	}
+	position, err := current.Position()
+	if err != nil {
+		return time.Duration(0), err
+	}
+	nextDuration, err := next.Duration()
+	if err != nil {
+		return time.Duration(0), err
+	}
+	remaining := position.Duration - position.Position
+	return remaining + nextDuration, nil
 }
 
 func (radio *Radio) Playlist() (*RadioPlaylist, error) {
