@@ -13,6 +13,3 @@ build:
 
 install:
 	cp -p bin/$(NAME) $(PREFIX)/bin/$(NAME)
-
-deps:
-	go get -u github.com/nitrous-io/goop
