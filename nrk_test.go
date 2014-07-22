@@ -41,6 +41,32 @@ func TestDuration(t *testing.T) {
 	}
 }
 
+func TestDurationWithoutSeconds(t *testing.T) {
+	track := testTrack()
+	track.Duration_ = "PT6M"
+	duration, err := track.Duration()
+	if err != nil {
+		t.Fatalf("Failed to parse duration: %s", err)
+	}
+	expected := time.Duration(6*time.Minute)
+	if duration != expected {
+		t.Fatalf("Expected %s, got %s", expected, duration)
+	}
+}
+
+func TestDurationWithoutMinutes(t *testing.T) {
+	track := testTrack()
+	track.Duration_ = "PT10S"
+	duration, err := track.Duration()
+	if err != nil {
+		t.Fatalf("Failed to parse duration: %s", err)
+	}
+	expected := time.Duration(10*time.Second)
+	if duration != expected {
+		t.Fatalf("Expected %s, got %s", expected, duration)
+	}
+}
+
 func TestPosition(t *testing.T) {
 	track := testTrack()
 	thirtySecsAgo := time.Now().Unix() - 30

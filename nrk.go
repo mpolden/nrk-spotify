@@ -79,15 +79,11 @@ func (track *RadioTrack) StartTime() (time.Time, error) {
 }
 
 func (track *RadioTrack) Duration() (time.Duration, error) {
-	re := regexp.MustCompile("^PT(\\d+)M(\\d+)S$")
-	matches := re.FindAllStringSubmatch(track.Duration_, 2)
-	if len(matches) > 0 && len(matches[0]) == 3 {
-		minutes := matches[0][1]
-		seconds := matches[0][2]
-		return time.ParseDuration(
-			fmt.Sprintf("%sm%ss", minutes, seconds))
+	duration := strings.ToLower(track.Duration_)
+	if strings.HasPrefix(duration, "pt") {
+		duration = duration[2:]
 	}
-	return time.Duration(0), fmt.Errorf("Could not parse duration")
+	return time.ParseDuration(duration)
 }
 
 func (track *RadioTrack) Position() (time.Duration, error) {
