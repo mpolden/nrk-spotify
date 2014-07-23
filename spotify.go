@@ -34,7 +34,12 @@ type Playlist struct {
 }
 
 type PlaylistTracks struct {
-	Items []PlaylistTrack `json:"items"`
+	Limit    int             `json:"limit"`
+	Next     string          `json:"next"`
+	Offset   int             `json:"offset"`
+	Previous string          `json:"previous"`
+	Total    int             `json:"total"`
+	Items    []PlaylistTrack `json:"items"`
 }
 
 type PlaylistTrack struct {
@@ -297,6 +302,40 @@ func (spotify *Spotify) GetOrCreatePlaylist(name string) (*Playlist, error) {
 		return nil, err
 	}
 	return &playlist, err
+}
+
+func (spotify *Spotify) RecentTracks(playlist *Playlist) (
+	[]PlaylistTrack, error) {
+	u := fmt.Sprintf(
+		"https://api.spotify.com/v1/users/%s/playlists/%s/tracks",
+		spotify.Profile.Id, playlist.Id)
+
+	getTracks := func(url string) (*PlaylistTracks, error) {
+		body, err := spotify.get(url)
+		if err != nil {
+			return nil, err
+		}
+		var playlistTracks PlaylistTracks
+		if err := json.Unmarshal(body, &playlistTracks); err != nil {
+			return nil, err
+		}
+		return &playlistTracks, nil
+	}
+	playlistTracks, err := getTracks(u)
+	if err != nil {
+		return nil, err
+	}
+	// If more than 100 tracks are returned, get the 100 last ones
+	if playlistTracks.Total > 100 {
+		offset := playlistTracks.Total - 100
+		params := url.Values{"offset": {strconv.Itoa(offset)}}
+		offsetUrl := fmt.Sprintf("%s?%s", u, params.Encode())
+		playlistTracks, err = getTracks(offsetUrl)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return playlistTracks.Items, nil
 }
 
 func (spotify *Spotify) Search(query string, types string, limit uint) ([]Track,
