@@ -184,7 +184,7 @@ func (sync *SyncServer) run() (time.Duration, error) {
 				t.String())
 			continue
 		}
-		tracks, err := sync.Spotify.SearchArtistTrack(t.Artist, t.Track)
+		tracks, err := sync.retrySearch(&t)
 		if err != nil {
 			logColorf("[red]Search failed: %s (%s)[reset]",
 				t.String(), err)
