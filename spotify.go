@@ -84,7 +84,7 @@ func (spotify *Spotify) update(newToken *Spotify) {
 	spotify.ExpiresIn = newToken.ExpiresIn
 }
 
-func (spotify *Spotify) refreshToken() error {
+func (spotify *Spotify) updateToken() error {
 	formData := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {spotify.RefreshToken},
@@ -117,31 +117,37 @@ func (spotify *Spotify) authHeader() string {
 	return spotify.TokenType + " " + spotify.AccessToken
 }
 
-func (spotify *Spotify) doGet(url string) (*http.Response, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
-	req.Header.Set("Authorization", spotify.authHeader())
-	if err != nil {
-		return nil, err
-	}
-	return client.Do(req)
-}
+type requestFn func() (*http.Response, error)
 
-func (spotify *Spotify) get(url string) ([]byte, error) {
-	resp, err := spotify.doGet(url)
-	if err != nil {
-		return nil, err
-	}
-	// Check if we need to refresh token
+func (spotify *Spotify) refreshToken(resp *http.Response, err error,
+	reqFn requestFn) (*http.Response, error) {
 	if resp.StatusCode == 401 {
-		if err := spotify.refreshToken(); err != nil {
+		if err := spotify.updateToken(); err != nil {
 			return nil, err
 		}
 		if err := spotify.Save(spotify.Auth.TokenFile); err != nil {
 			return nil, err
 		}
-		resp, err = spotify.doGet(url)
+		return reqFn()
 	}
+	return resp, err
+}
+
+func (spotify *Spotify) get(url string) ([]byte, error) {
+	getFn := func() (*http.Response, error) {
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", url, nil)
+		req.Header.Set("Authorization", spotify.authHeader())
+		if err != nil {
+			return nil, err
+		}
+		return client.Do(req)
+	}
+	resp, err := getFn()
+	if err != nil {
+		return nil, err
+	}
+	resp, err = spotify.refreshToken(resp, err, getFn)
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -150,32 +156,22 @@ func (spotify *Spotify) get(url string) ([]byte, error) {
 	return body, err
 }
 
-func (spotify *Spotify) doPost(url string, body []byte) (*http.Response,
-	error) {
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	req.Header.Set("Authorization", spotify.authHeader())
-	req.Header.Set("Content-Type", "application/json")
-	if err != nil {
-		return nil, err
-	}
-	return client.Do(req)
-}
-
 func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
-	resp, err := spotify.doPost(url, body)
+	postFn := func() (*http.Response, error) {
+		client := &http.Client{}
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+		req.Header.Set("Authorization", spotify.authHeader())
+		req.Header.Set("Content-Type", "application/json")
+		if err != nil {
+			return nil, err
+		}
+		return client.Do(req)
+	}
+	resp, err := postFn()
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode == 401 {
-		if err := spotify.refreshToken(); err != nil {
-			return nil, err
-		}
-		if err := spotify.Save(spotify.Auth.TokenFile); err != nil {
-			return nil, err
-		}
-		resp, err = spotify.doPost(url, body)
-	}
+	resp, err = spotify.refreshToken(resp, err, postFn)
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
