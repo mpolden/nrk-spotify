@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/cenkalti/backoff"
 	"github.com/golang/groupcache/lru"
 	"github.com/mitchellh/colorstring"
 	"log"
@@ -50,14 +51,28 @@ func (sync *SyncServer) initCache() {
 
 func (sync *SyncServer) Serve() {
 	log.Printf("Server started")
-	if err := sync.initPlaylist(); err != nil {
+
+	log.Print("Initializing Spotify playlist")
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = time.Duration(5 * time.Minute)
+	ticker := backoff.NewTicker(b)
+	var err error
+	for _ = range ticker.C {
+		if err = sync.initPlaylist(); err != nil {
+			log.Printf("Failed to get playlist: %s", err)
+			log.Println("Retrying...")
+			continue
+		}
+		break
+	}
+	if err != nil {
 		log.Fatalf("Failed to get or create playlist: %s", err)
 	}
-	log.Printf("Spotify playlist: %s", sync.playlist.String())
+	log.Printf("Playlist: %s", sync.playlist.String())
 
+	log.Print("Initializing cache")
 	sync.initCache()
-	log.Printf("LRU cache initialized: %d/%d", sync.cache.Len(),
-		sync.cache.MaxEntries)
+	log.Printf("Size: %d/%d", sync.cache.Len(), sync.cache.MaxEntries)
 
 	if sync.Adaptive {
 		log.Print("Automatically determining interval")
@@ -82,32 +97,87 @@ func (sync *SyncServer) scheduleRun() <-chan time.Time {
 	return time.After(duration)
 }
 
+func (sync *SyncServer) retryPlaylist() (*RadioPlaylist, error) {
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = time.Duration(1 * time.Minute)
+	ticker := backoff.NewTicker(b)
+	var playlist *RadioPlaylist
+	var err error
+	for _ = range ticker.C {
+		playlist, err = sync.Radio.Playlist()
+		if err != nil {
+			log.Printf("Retrieving radio playlist failed: %s", err)
+			log.Println("Retrying...")
+			continue
+		}
+		break
+	}
+	return playlist, err
+}
+
+func (sync *SyncServer) retrySearch(track *RadioTrack) ([]Track, error) {
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = time.Duration(1 * time.Minute)
+	ticker := backoff.NewTicker(b)
+	var tracks []Track
+	var err error
+	for _ = range ticker.C {
+		tracks, err = sync.Spotify.SearchArtistTrack(track.Artist,
+			track.Track)
+		if err != nil {
+			log.Printf("Search failed: %s", err)
+			log.Println("Retrying...")
+			continue
+		}
+		break
+	}
+	return tracks, err
+}
+
+func (sync *SyncServer) retryAddTrack(track *Track) error {
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = time.Duration(1 * time.Minute)
+	ticker := backoff.NewTicker(b)
+	var err error
+	for _ = range ticker.C {
+		err = sync.Spotify.AddTrack(sync.playlist, track)
+		if err != nil {
+			log.Printf("Add track failed: %s", err)
+			log.Println("Retrying...")
+			continue
+		}
+		break
+	}
+	return err
+}
+
+func (sync *SyncServer) logCurrentTrack(playlist *RadioPlaylist) {
+	current, err := playlist.Current()
+	if err != nil {
+		logColorf("[red]Failed to get current track: %s[reset]", err)
+		return
+	}
+	position, err := current.Position()
+	if err != nil {
+		logColorf("[red]Failed to parse metadata: %s[reset]", err)
+		return
+	}
+	logColorf("[cyan]%s is currently playing: %s - %s[reset] (%s) [%s]",
+		sync.Radio.Name, current.Artist, current.Track,
+		position.String(), position.Symbol(10, true))
+}
+
 func (sync *SyncServer) run() (time.Duration, error) {
 	logColorf("[light_magenta]Running sync[reset]")
 
-	radioPlaylist, err := sync.Radio.Playlist()
+	radioPlaylist, err := sync.retryPlaylist()
 	if err != nil {
 		return time.Duration(0), err
 	}
-
-	radioTracks := radioPlaylist.Tracks[1:] // Skip previous track
-	if current, err := radioPlaylist.Current(); err != nil {
-		logColorf("[red]Failed to get current track: %s[reset]", err)
-	} else {
-		if position, err := current.Position(); err != nil {
-			logColorf("[red]Failed to parse metadata: %s[reset]",
-				err)
-		} else {
-			logColorf("[cyan]%s is currently playing: %s - %s"+
-				"[reset] (%s) [%s]",
-				sync.Radio.Name, current.Artist, current.Track,
-				position.String(),
-				position.Symbol(10, true))
-		}
-	}
+	sync.logCurrentTrack(radioPlaylist)
 
 	added := 0
-	for _, t := range radioTracks {
+	for _, t := range radioPlaylist.Tracks {
 		logColorf("Searching for: %s", t.String())
 		if !t.IsMusic() {
 			logColorf("[green]Not music, skipping: %s[reset]",
@@ -132,8 +202,7 @@ func (sync *SyncServer) run() (time.Duration, error) {
 			added++
 			continue
 		}
-		if err = sync.Spotify.AddTrack(sync.playlist,
-			track); err != nil {
+		if err = sync.retryAddTrack(track); err != nil {
 			logColorf("[red]Failed to add: %s (%s)[reset]",
 				track.String(), err)
 			continue
@@ -147,9 +216,9 @@ func (sync *SyncServer) run() (time.Duration, error) {
 	if !sync.Adaptive {
 		return sync.Interval, nil
 	}
-	if added != len(radioTracks) {
+	if added != len(radioPlaylist.Tracks) {
 		log.Printf("%d/%d tracks were added. Falling back to "+
-			" regular interval", added, len(radioTracks))
+			" regular interval", added, len(radioPlaylist.Tracks))
 		return sync.Interval, nil
 	}
 	return radioPlaylist.NextSync()
