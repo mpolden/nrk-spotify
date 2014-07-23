@@ -191,8 +191,8 @@ func (sync *SyncServer) run() (time.Duration, error) {
 			continue
 		}
 		if len(tracks) == 0 {
-			logColorf("[yellow]Track not found: %s (%s)[reset]",
-				t.String(), err)
+			logColorf("[yellow]Track not found: %s[reset]",
+				t.String())
 			continue
 		}
 		track := &tracks[0]
