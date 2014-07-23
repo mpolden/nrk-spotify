@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder "salt/roots/", "/srv/salt/"
   config.vm.network :forwarded_port, guest: 8080, host: 8080
   config.vm.provider :virtualbox do |vb|
-    vb.customize ["modifyvm", :id, "--memory", "1024"]
+    vb.customize ["modifyvm", :id, "--memory", "512"]
     # Resync time if it's more than 10 seconds out of sync
     vb.customize ["guestproperty", "set", :id,
                   "/VirtualBox/GuestAdd/VBoxService/--timesync-set-threshold",
