@@ -7,12 +7,15 @@ all: fmt
 fmt:
 	gofmt -w=true *.go
 
+deps:
+	$(GO) get -d -v
+
 build:
-	mkdir -p bin
+	@mkdir -p bin
 	$(GO) build -o bin/$(NAME)
 
 install:
-	cp -p $(NAME) $(PREFIX)/bin/$(NAME)
+	cp -p bin/$(NAME) $(PREFIX)/bin/$(NAME)
 
 test:
-	go test
+	$(GO) test
