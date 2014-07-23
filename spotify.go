@@ -80,7 +80,7 @@ func (playlist *Playlist) Contains(track Track) bool {
 
 func (playlist *Playlist) String() string {
 	return fmt.Sprintf("%s (%s) [%d songs]", playlist.Name, playlist.Id,
-		len(playlist.Tracks.Items))
+		playlist.Tracks.Total)
 }
 
 func (spotify *Spotify) update(newToken *Spotify) {
