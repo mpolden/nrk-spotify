@@ -1,5 +1,5 @@
 /.token.json
 /.vendor/
-/nrk-spotify
+/bin/
 /pkg/
 /src/
