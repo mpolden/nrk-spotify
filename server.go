@@ -34,31 +34,15 @@ func (sync *SyncServer) addTrack(track *Track) {
 }
 
 func (sync *SyncServer) initPlaylist() error {
-	playlist, err := sync.Spotify.GetOrCreatePlaylist(sync.Radio.Name)
-	if err != nil {
-		return err
-	}
-	sync.playlist = playlist
-	return nil
-}
-
-func (sync *SyncServer) initCache() {
-	sync.cache = lru.New(sync.CacheSize)
-	for _, t := range sync.playlist.Tracks.Items {
-		sync.addTrack(&t.Track)
-	}
-}
-
-func (sync *SyncServer) Serve() {
-	log.Printf("Server started")
-
-	log.Print("Initializing Spotify playlist")
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(5 * time.Minute)
 	ticker := backoff.NewTicker(b)
+	var playlist *Playlist
 	var err error
 	for _ = range ticker.C {
-		if err = sync.initPlaylist(); err != nil {
+		playlist, err = sync.Spotify.GetOrCreatePlaylist(
+			sync.Radio.Name)
+		if err != nil {
 			log.Printf("Failed to get playlist: %s", err)
 			log.Println("Retrying...")
 			continue
@@ -66,12 +50,50 @@ func (sync *SyncServer) Serve() {
 		break
 	}
 	if err != nil {
-		log.Fatalf("Failed to get or create playlist: %s", err)
+		return err
+	}
+	sync.playlist = playlist
+	return nil
+}
+
+func (sync *SyncServer) initCache() error {
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = time.Duration(5 * time.Minute)
+	ticker := backoff.NewTicker(b)
+	var tracks []PlaylistTrack
+	var err error
+	for _ = range ticker.C {
+		tracks, err = sync.Spotify.RecentTracks(sync.playlist)
+		if err != nil {
+			log.Printf("Failed to get recent tracks: %s", err)
+			log.Println("Retrying...")
+			continue
+		}
+		break
+	}
+	if err != nil {
+		return err
+	}
+	sync.cache = lru.New(sync.CacheSize)
+	for _, t := range tracks {
+		sync.addTrack(&t.Track)
+	}
+	return nil
+}
+
+func (sync *SyncServer) Serve() {
+	log.Printf("Server started")
+
+	log.Print("Initializing Spotify playlist")
+	if err := sync.initPlaylist(); err != nil {
+		log.Fatalf("Failed to initialize playlist: %s", err)
 	}
 	log.Printf("Playlist: %s", sync.playlist.String())
 
 	log.Print("Initializing cache")
-	sync.initCache()
+	if err := sync.initCache(); err != nil {
+		log.Fatalf("Failed to init cache: %s", err)
+	}
 	log.Printf("Size: %d/%d", sync.cache.Len(), sync.cache.MaxEntries)
 
 	if sync.Adaptive {
