@@ -153,6 +153,10 @@ func (spotify *Spotify) get(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode/100 != 2 {
+		return nil, fmt.Errorf("Request failed [%d]: %s",
+			resp.StatusCode, body)
+	}
 	return body, err
 }
 
@@ -314,17 +318,14 @@ func (spotify *Spotify) Search(query string, types string, limit uint) ([]Track,
 	return result.Tracks.Items, nil
 }
 
-func (spotify *Spotify) SearchArtistTrack(artist string, track string) (*Track,
+func (spotify *Spotify) SearchArtistTrack(artist string, track string) ([]Track,
 	error) {
 	query := fmt.Sprintf("artist:%s track:%s", artist, track)
 	tracks, err := spotify.Search(query, "track", 1)
 	if err != nil {
 		return nil, err
 	}
-	if len(tracks) > 0 {
-		return &tracks[0], nil
-	}
-	return nil, fmt.Errorf("0 matches")
+	return tracks, nil
 }
 
 func (spotify *Spotify) AddTracks(playlist *Playlist, tracks []Track) error {

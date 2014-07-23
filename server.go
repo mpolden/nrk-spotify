@@ -114,12 +114,18 @@ func (sync *SyncServer) run() (time.Duration, error) {
 				t.String())
 			continue
 		}
-		track, err := sync.Spotify.SearchArtistTrack(t.Artist, t.Track)
+		tracks, err := sync.Spotify.SearchArtistTrack(t.Artist, t.Track)
 		if err != nil {
-			logColorf("[red]Not found: %s (%s)[reset]",
+			logColorf("[red]Search failed: %s (%s)[reset]",
 				t.String(), err)
 			continue
 		}
+		if len(tracks) == 0 {
+			logColorf("[yellow]Track not found: %s (%s)[reset]",
+				t.String(), err)
+			continue
+		}
+		track := &tracks[0]
 		if sync.isCached(track) {
 			logColorf("[yellow]Already added: %s[reset]",
 				track.String())
