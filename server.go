@@ -198,8 +198,12 @@ func (sync *SyncServer) run() (time.Duration, error) {
 	}
 	sync.logCurrentTrack(radioPlaylist)
 
+	radioTracks, err := radioPlaylist.CurrentAndNext()
+	if err != nil {
+		return time.Duration(0), err
+	}
 	added := 0
-	for _, t := range radioPlaylist.Tracks {
+	for _, t := range radioTracks {
 		logColorf("Searching for: %s", t.String())
 		if !t.IsMusic() {
 			logColorf("[green]Not music, skipping: %s[reset]",
@@ -238,9 +242,9 @@ func (sync *SyncServer) run() (time.Duration, error) {
 	if !sync.Adaptive {
 		return sync.Interval, nil
 	}
-	if added != len(radioPlaylist.Tracks) {
+	if added != len(radioTracks) {
 		log.Printf("%d/%d tracks were added. Falling back to "+
-			" regular interval", added, len(radioPlaylist.Tracks))
+			" regular interval", added, len(radioTracks))
 		return sync.Interval, nil
 	}
 	return radioPlaylist.NextSync()

@@ -61,6 +61,14 @@ func (playlist *RadioPlaylist) Next() (*RadioTrack, error) {
 	return nil, fmt.Errorf("Next track not found")
 }
 
+func (playlist *RadioPlaylist) CurrentAndNext() ([]RadioTrack, error) {
+	if len(playlist.Tracks) < 3 {
+		return nil, fmt.Errorf("Playlist contains %d tracks, could "+
+			"not determine current and next", len(playlist.Tracks))
+	}
+	return playlist.Tracks[1:], nil
+}
+
 func (track *RadioTrack) IsMusic() bool {
 	return track.Type == "Music"
 }

@@ -197,3 +197,35 @@ func TestNextSync(t *testing.T) {
 		t.Fatalf("Expected %s, got %s", expected, nextSync)
 	}
 }
+
+func TestCurrentAndNext(t *testing.T) {
+	tracks := []RadioTrack{
+		RadioTrack{Track: "A"},
+		RadioTrack{Track: "B"},
+		RadioTrack{Track: "C"},
+	}
+	playlist := RadioPlaylist{Tracks: tracks}
+	currentAndNext, err := playlist.CurrentAndNext()
+	if err != nil {
+		t.Fatalf("Failed to get current and next track")
+	}
+	expected := "B"
+	if currentAndNext[0].Track != expected {
+		t.Fatalf("Expected %s, got %s", expected, currentAndNext[0])
+	}
+	expected = "C"
+	if currentAndNext[1].Track != expected {
+		t.Fatalf("Expected %s, got %s", expected, currentAndNext[1])
+	}
+}
+
+func TestCurrentAndNextInvalidLength(t *testing.T) {
+	tracks := []RadioTrack{
+		RadioTrack{Track: "A"},
+	}
+	playlist := RadioPlaylist{Tracks: tracks}
+	_, err := playlist.CurrentAndNext()
+	if err == nil {
+		t.Fatalf("Expected error for playlist length < 3")
+	}
+}
