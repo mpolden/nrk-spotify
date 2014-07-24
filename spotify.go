@@ -306,34 +306,24 @@ func (spotify *Spotify) GetOrCreatePlaylist(name string) (*Playlist, error) {
 
 func (spotify *Spotify) RecentTracks(playlist *Playlist) (
 	[]PlaylistTrack, error) {
+
+	if playlist.Tracks.Total <= 100 {
+		return playlist.Tracks.Items, nil
+	}
+	// If playlist has more than 100 tracks, get the 100 last ones
+	offset := playlist.Tracks.Total - 100
+	params := url.Values{"offset": {strconv.Itoa(offset)}}
 	u := fmt.Sprintf(
 		"https://api.spotify.com/v1/users/%s/playlists/%s/tracks",
 		spotify.Profile.Id, playlist.Id)
-
-	getTracks := func(url string) (*PlaylistTracks, error) {
-		body, err := spotify.get(url)
-		if err != nil {
-			return nil, err
-		}
-		var playlistTracks PlaylistTracks
-		if err := json.Unmarshal(body, &playlistTracks); err != nil {
-			return nil, err
-		}
-		return &playlistTracks, nil
-	}
-	playlistTracks, err := getTracks(u)
+	offsetUrl := fmt.Sprintf("%s?%s", u, params.Encode())
+	body, err := spotify.get(offsetUrl)
 	if err != nil {
 		return nil, err
 	}
-	// If more than 100 tracks are returned, get the 100 last ones
-	if playlistTracks.Total > 100 {
-		offset := playlistTracks.Total - 100
-		params := url.Values{"offset": {strconv.Itoa(offset)}}
-		offsetUrl := fmt.Sprintf("%s?%s", u, params.Encode())
-		playlistTracks, err = getTracks(offsetUrl)
-		if err != nil {
-			return nil, err
-		}
+	var playlistTracks PlaylistTracks
+	if err := json.Unmarshal(body, &playlistTracks); err != nil {
+		return nil, err
 	}
 	return playlistTracks.Items, nil
 }
