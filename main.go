@@ -68,7 +68,8 @@ func main() {
 
 Usage:
   nrk-spotify auth [-l <address>] [-f <file>] <client-id> <client-secret>
-  nrk-spotify server [-f <file>] [-i <interval>] [-a] [-c <max>] <name> <radio-id>
+  nrk-spotify server [-f <file>] [-i <minutes>] [-a] [-c <max>] <name> <radio-id>
+  nrk-spotify list
   nrk-spotify -h | --help
 
 Options:
@@ -86,12 +87,16 @@ Options:
 	if auth {
 		spotifyAuth := makeSpotifyAuth(arguments)
 		spotifyAuth.Serve()
-	}
-	if server {
+	} else if server {
 		server, err := makeServer(arguments)
 		if err != nil {
 			log.Fatalf("Failed to initialize server: %s", err)
 		}
 		server.Serve()
+	} else {
+		fmt.Println("Available radio IDs:")
+		for _, id := range radioIds {
+			fmt.Println(id)
+		}
 	}
 }
