@@ -30,9 +30,15 @@ Options:
 
 To compile you need the [Golang compiler](http://golang.org/doc/install).
 
-`$ PREFIX=/usr/local make build install`
+Compile:
 
-## Example output
+`$ make deps build`
+
+Install:
+
+`$ PREFIX=/usr/local make install`
+
+## In action
 
 ![Screenshot](docs/output.png)
 
@@ -57,19 +63,22 @@ can be stopped with `Ctrl+C`.
 
 ### Run the sync server
 
-Choose a radio channel to sync. The following radio IDs can be used:
+Choose a playlist name and a radio channel to sync. The following radio IDs can
+be used:
 
 `p1pluss p2 p3 p13 mp3 radio_super klassisk jazz folkemusikk urort
 radioresepsjonen national_rap_show pyro`
 
+Start sync server:
+
 ```
-$ nrk-spotify server 'NRK P3 Pyro' p3
+$ nrk-spotify server 'NRK P3 Pyro' pyro
 ```
 
 `NRK P3 Pyro` will become the playlist name in Spotify, which will be
 created if it doesn't exist.
 
-The server will then update the playlist with new songs every 5 minutes. 
+The playlist will be updated with new songs every 5 minutes.
 
 ## License
 Licensed under the MIT license.
