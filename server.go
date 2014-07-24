@@ -206,7 +206,7 @@ func (sync *SyncServer) run() (time.Duration, error) {
 	for _, t := range radioTracks {
 		logColorf("Searching for: %s", t.String())
 		if !t.IsMusic() {
-			logColorf("[green]Not music, skipping: %s[reset]",
+			logColorf("[yellow]Not music, skipping: %s[reset]",
 				t.String())
 			continue
 		}
@@ -223,7 +223,7 @@ func (sync *SyncServer) run() (time.Duration, error) {
 		}
 		track := &tracks[0]
 		if sync.isCached(track) {
-			logColorf("[yellow]Already added: %s[reset]",
+			logColorf("[blue]Already added: %s[reset]",
 				track.String())
 			added++
 			continue

@@ -13,6 +13,22 @@ import (
 	"time"
 )
 
+var radioIds []string = []string{
+	"p1pluss",
+	"p2",
+	"p3",
+	"p13",
+	"mp3",
+	"radio_super",
+	"klassisk",
+	"jazz",
+	"folkemusikk",
+	"urort",
+	"radioresepsjonen",
+	"national_rap_show",
+	"pyro",
+}
+
 type Radio struct {
 	Name string
 	Id   string
@@ -192,4 +208,13 @@ func (radio *Radio) Playlist() (*RadioPlaylist, error) {
 		return nil, err
 	}
 	return &RadioPlaylist{Tracks: tracks}, nil
+}
+
+func (radio *Radio) isValidId() bool {
+	for _, id := range radioIds {
+		if id == radio.Id {
+			return true
+		}
+	}
+	return false
 }

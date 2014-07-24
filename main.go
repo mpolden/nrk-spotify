@@ -51,6 +51,9 @@ func makeServer(args map[string]interface{}) (*SyncServer, error) {
 		Name: radioName,
 		Id:   radioId,
 	}
+	if !radio.isValidId() {
+		return nil, fmt.Errorf("'%s' is not a valid radio ID", radio.Id)
+	}
 	return &SyncServer{
 		Spotify:   spotify,
 		Radio:     &radio,
