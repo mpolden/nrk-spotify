@@ -97,23 +97,22 @@ func (sync *SyncServer) Serve() {
 	log.Printf("Size: %d/%d", sync.cache.Len(), sync.cache.MaxEntries)
 
 	if sync.Adaptive {
-		log.Print("Automatically determining interval")
+		log.Print("Using adaptive interval")
 	} else {
 		log.Printf("Syncing every %s", sync.Interval)
 	}
 	for {
 		select {
-		case <-sync.scheduleRun():
+		case <-sync.runForever():
 		}
 	}
 }
 
-func (sync *SyncServer) scheduleRun() <-chan time.Time {
+func (sync *SyncServer) runForever() <-chan time.Time {
 	duration, err := sync.run()
 	if err != nil {
-		log.Printf("Sync failed: %s\n", err)
-		log.Print("Retrying in 1 minute")
-		return time.After(1 * time.Minute)
+		log.Printf("Sync failed: %s", err)
+		duration = sync.Interval
 	}
 	log.Printf("Next sync in %s", duration)
 	return time.After(duration)
@@ -223,7 +222,7 @@ func (sync *SyncServer) run() (time.Duration, error) {
 		}
 		track := &tracks[0]
 		if sync.isCached(track) {
-			logColorf("[blue]Already added: %s[reset]",
+			logColorf("[yellow]Already added: %s[reset]",
 				track.String())
 			added++
 			continue
