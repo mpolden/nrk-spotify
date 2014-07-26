@@ -1,5 +1,7 @@
 # nrk-spotify
 
+[![Build Status](https://travis-ci.org/martinp/nrk-spotify.png)](https://travis-ci.org/martinp/nrk-spotify)
+
 A server that combines the NRK radio API and Spotify API to create Spotify
 playlists based on current radio playlist.
 
