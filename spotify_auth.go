@@ -135,8 +135,6 @@ func (auth *SpotifyAuth) Callback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to save token", 400)
 		return
 	}
-	fmt.Printf(colorstring.Color("Wrote file: [green]%s[reset]\n"),
-		auth.TokenFile)
 	fmt.Fprintf(w, "Success! Wrote token file to %s", auth.TokenFile)
 }
 

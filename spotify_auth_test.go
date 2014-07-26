@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 )
 
@@ -124,6 +127,58 @@ func TestGetToken(t *testing.T) {
 	if spotify.RefreshToken != expected {
 		t.Fatalf("Expected '%s', got '%s'",
 			expected, spotify.RefreshToken)
+	}
+}
+
+func TestCallback(t *testing.T) {
+	tempFile, err := ioutil.TempFile("", "spotify_auth")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.Remove(tempFile.Name()); err != nil {
+			t.Fatal(err)
+		}
+	}()
+	auth := SpotifyAuth{
+		ClientId:     "foo",
+		ClientSecret: "bar",
+		TokenFile:    tempFile.Name(),
+	}
+	tokenHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, tokenResponse)
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/token", tokenHandler)
+	mux.HandleFunc("/callback", auth.Callback)
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	auth.listenURL = server.URL
+	auth.url = server.URL
+
+	req, err := http.NewRequest("GET",
+		auth.CallbackURL()+"?code=foobar&state=secret", nil)
+	req.AddCookie(&http.Cookie{
+		Name:  "spotify_auth_state",
+		Value: "secret",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected 200, got %d: %s", resp.StatusCode, body)
 	}
 }
 
