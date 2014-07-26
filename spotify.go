@@ -313,11 +313,10 @@ func (spotify *Spotify) RecentTracks(playlist *Playlist) (
 	// If playlist has more than 100 tracks, get the 100 last ones
 	offset := playlist.Tracks.Total - 100
 	params := url.Values{"offset": {strconv.Itoa(offset)}}
-	u := fmt.Sprintf(
-		"https://api.spotify.com/v1/users/%s/playlists/%s/tracks",
+	url := fmt.Sprintf(
+		"https://api.spotify.com/v1/users/%s/playlists/%s/tracks?",
 		spotify.Profile.Id, playlist.Id)
-	offsetUrl := fmt.Sprintf("%s?%s", u, params.Encode())
-	body, err := spotify.get(offsetUrl)
+	body, err := spotify.get(url + params.Encode())
 	if err != nil {
 		return nil, err
 	}
