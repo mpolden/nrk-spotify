@@ -22,6 +22,7 @@ type SpotifyAuth struct {
 	ClientSecret string `json:"client_secret"`
 	TokenFile    string `json:"token_file"`
 	listen       string
+	listenURL    string
 	url          string
 }
 
@@ -33,6 +34,9 @@ func (auth *SpotifyAuth) URL() string {
 }
 
 func (auth *SpotifyAuth) ListenURL() string {
+	if auth.listenURL != "" {
+		return auth.listenURL
+	}
 	if strings.HasPrefix(auth.listen, ":") {
 		return "http://localhost" + auth.listen
 	}
