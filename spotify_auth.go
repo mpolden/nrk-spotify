@@ -23,15 +23,15 @@ type SpotifyAuth struct {
 	listen       string
 }
 
-func (auth *SpotifyAuth) Url() string {
+func (auth *SpotifyAuth) ListenURL() string {
 	if strings.HasPrefix(auth.listen, ":") {
 		return "http://localhost" + auth.listen
 	}
 	return "http://" + auth.listen
 }
 
-func (auth *SpotifyAuth) CallbackUrl() string {
-	return auth.Url() + "/callback"
+func (auth *SpotifyAuth) CallbackURL() string {
+	return auth.ListenURL() + "/callback"
 }
 
 func (auth *SpotifyAuth) authHeader() string {
@@ -63,7 +63,7 @@ func (auth *SpotifyAuth) Login(w http.ResponseWriter, r *http.Request) {
 		"response_type": {"code"},
 		"client_id":     {auth.ClientId},
 		"scope":         {scope},
-		"redirect_uri":  {auth.CallbackUrl()},
+		"redirect_uri":  {auth.CallbackURL()},
 		"state":         {state},
 	}
 	url := "https://accounts.spotify.com/authorize?" + params.Encode()
@@ -73,7 +73,7 @@ func (auth *SpotifyAuth) Login(w http.ResponseWriter, r *http.Request) {
 func (auth *SpotifyAuth) getToken(code []string) (*Spotify, error) {
 	formData := url.Values{
 		"code":          code,
-		"redirect_uri":  {auth.CallbackUrl()},
+		"redirect_uri":  {auth.CallbackURL()},
 		"grant_type":    {"authorization_code"},
 		"client_id":     {auth.ClientId},
 		"client_secret": {auth.ClientSecret},
@@ -132,6 +132,6 @@ func (auth *SpotifyAuth) Serve() {
 	http.HandleFunc("/callback", auth.Callback)
 	fmt.Printf(colorstring.Color(
 		"Visit [green]%s/login[reset] to authenticate "+
-			"with Spotify.\n"), auth.Url())
+			"with Spotify.\n"), auth.ListenURL())
 	http.ListenAndServe(auth.listen, nil)
 }

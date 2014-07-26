@@ -4,14 +4,16 @@ import (
 	"testing"
 )
 
-func TestUrl(t *testing.T) {
+func TestURL(t *testing.T) {
 	auth := SpotifyAuth{listen: ":8080"}
-	if auth.Url() != "http://localhost:8080" {
-		t.Fatalf("Expected http://localhost:8080, got %s", auth.Url())
+	if auth.ListenURL() != "http://localhost:8080" {
+		t.Fatalf("Expected http://localhost:8080, got %s",
+			auth.ListenURL())
 	}
 	auth = SpotifyAuth{listen: "1.2.3.4:8080"}
-	if auth.Url() != "http://1.2.3.4:8080" {
-		t.Fatalf("Expected http://1.2.3.4:8080, got %s", auth.Url())
+	if auth.ListenURL() != "http://1.2.3.4:8080" {
+		t.Fatalf("Expected http://1.2.3.4:8080, got %s",
+			auth.ListenURL())
 	}
 }
 
