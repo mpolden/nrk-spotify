@@ -94,3 +94,43 @@ func TestLogin(t *testing.T) {
 		t.Fatalf("Expected 'state' to be set")
 	}
 }
+
+func TestGetToken(t *testing.T) {
+	server := newTestServer("/api/token", tokenResponse)
+	defer server.Close()
+	auth := SpotifyAuth{
+		ClientId:     "foo",
+		ClientSecret: "bar",
+		url:          server.URL,
+	}
+	spotify, err := auth.getToken([]string{"foobar"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := "NgCXRK...MzYjw"
+	if spotify.AccessToken != expected {
+		t.Fatalf("Expected '%s', got '%s'",
+			expected, spotify.AccessToken)
+	}
+	expected = "Bearer"
+	if spotify.TokenType != expected {
+		t.Fatalf("Expected '%s', got '%s'",
+			expected, spotify.TokenType)
+	}
+	if spotify.ExpiresIn != 3600 {
+		t.Fatalf("Expected 3600, got %d", spotify.ExpiresIn)
+	}
+	expected = "NgAagA...Um_SHo"
+	if spotify.RefreshToken != expected {
+		t.Fatalf("Expected '%s', got '%s'",
+			expected, spotify.RefreshToken)
+	}
+}
+
+const tokenResponse string = `
+{
+   "access_token": "NgCXRK...MzYjw",
+   "token_type": "Bearer",
+   "expires_in": 3600,
+   "refresh_token": "NgAagA...Um_SHo"
+}`
