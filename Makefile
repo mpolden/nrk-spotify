@@ -2,7 +2,7 @@ PREFIX ?= /usr/local
 GO=go
 NAME=nrk-spotify
 
-all: fmt
+all: test build
 
 fmt:
 	gofmt -w=true *.go
