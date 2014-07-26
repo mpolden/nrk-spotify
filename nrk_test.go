@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 )
@@ -229,3 +231,98 @@ func TestCurrentAndNextInvalidLength(t *testing.T) {
 		t.Fatalf("Expected error for playlist length < 3")
 	}
 }
+
+func newTestServer(path string, body string) *httptest.Server {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, body)
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc(path, handler)
+	return httptest.NewServer(mux)
+}
+
+func TestPlaylist(t *testing.T) {
+	server := newTestServer("/", testResponse)
+	defer server.Close()
+	r := Radio{Name: "P3 Pyro", Id: "pyro", url: server.URL}
+	playlist, err := r.Playlist()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(playlist.Tracks) != 3 {
+		t.Fatalf("Expected playlist to contain 3 tracks, got %d",
+			len(playlist.Tracks))
+	}
+	if playlist.Tracks[0].Track != "21st Century Schizoid Man" {
+		t.Fatalf("Expected '21st Century Schizoid Man', got %s",
+			playlist.Tracks[0].Track)
+	}
+	if playlist.Tracks[1].Track != "Room 24" {
+		t.Fatalf("Expected 'Room 24', got %s",
+			playlist.Tracks[1].Track)
+	}
+	if playlist.Tracks[2].Track != "The King is Dead" {
+		t.Fatalf("Expected 'The King is Dead', got %s",
+			playlist.Tracks[2].Track)
+	}
+}
+
+func TestPlaylistInvalidResponse(t *testing.T) {
+	server := newTestServer("/", "gopher says: no JSON for you!")
+	defer server.Close()
+	r := Radio{Name: "P3 Pyro", Id: "pyro", url: server.URL}
+	_, err := r.Playlist()
+	if err == nil {
+		t.Fatal("Expected error for invalid JSON response")
+	}
+}
+
+const testResponse string = `
+[
+  {
+    "title": "21st Century Schizoid Man",
+    "description": "King Crimson",
+    "programId": "unknown",
+    "channelId": "pyro",
+    "startTime": "/Date(1406402993000+0200)/",
+    "duration": "PT7M21S",
+    "type": "Music",
+    "imageUrl": "http://gfx.nrk.no/-VFyp6wjWilG-wNIF3mOiwPAg7Bign7rPjUT_F26vpOQ",
+    "programTitle": null,
+    "relativeTimeType": "Present",
+    "category": null,
+    "contributors": "",
+    "creators": null
+  },
+  {
+    "title": "Room 24",
+    "description": "Volbeat + King Diamond",
+    "programId": "unknown",
+    "channelId": "pyro",
+    "startTime": "/Date(1406403434000+0200)/",
+    "duration": "PT5M6S",
+    "type": "Music",
+    "imageUrl": null,
+    "programTitle": null,
+    "relativeTimeType": "Present",
+    "category": null,
+    "contributors": "",
+    "creators": null
+  },
+  {
+    "title": "The King is Dead",
+    "description": "Audrey Horne",
+    "programId": "unknown",
+    "channelId": "pyro",
+    "startTime": "/Date(1406403741000+0200)/",
+    "duration": "PT5M12S",
+    "type": "Music",
+    "imageUrl": "http://gfx.nrk.no/Uuw5ZZW7q0OzI6iQ_JMS1wlT5xzkzsB-Pf9t_XWvfniQ",
+    "programTitle": null,
+    "relativeTimeType": "Future",
+    "category": null,
+    "contributors": "",
+    "creators": null
+  }
+]`

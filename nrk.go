@@ -29,9 +29,12 @@ var radioIds []string = []string{
 	"pyro",
 }
 
+const defaultURL string = "http://v7.psapi.nrk.no"
+
 type Radio struct {
 	Name string
 	Id   string
+	url  string
 }
 
 type RadioPlaylist struct {
@@ -51,9 +54,12 @@ type Position struct {
 	Duration time.Duration
 }
 
-func (radio *Radio) Url() string {
-	return fmt.Sprintf(
-		"http://v7.psapi.nrk.no/channels/%s/liveelements/now", radio.Id)
+func (radio *Radio) URL() string {
+	url := radio.url
+	if url == "" {
+		url = defaultURL
+	}
+	return url + fmt.Sprintf("/channels/%s/liveelements/now", radio.Id)
 }
 
 func (playlist *RadioPlaylist) Previous() (*RadioTrack, error) {
@@ -194,7 +200,7 @@ func (playlist *RadioPlaylist) NextSync() (time.Duration, error) {
 }
 
 func (radio *Radio) Playlist() (*RadioPlaylist, error) {
-	resp, err := http.Get(radio.Url())
+	resp, err := http.Get(radio.URL())
 	if err != nil {
 		return nil, err
 	}
