@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+const defaultAuthURL string = "https://accounts.spotify.com"
 const stateKey string = "spotify_auth_state"
 const scope string = "playlist-modify-public playlist-modify-private " +
 	"playlist-read-private"
@@ -21,6 +22,14 @@ type SpotifyAuth struct {
 	ClientSecret string `json:"client_secret"`
 	TokenFile    string `json:"token_file"`
 	listen       string
+	url          string
+}
+
+func (auth *SpotifyAuth) URL() string {
+	if auth.url == "" {
+		return defaultAuthURL
+	}
+	return auth.url
 }
 
 func (auth *SpotifyAuth) ListenURL() string {
@@ -66,7 +75,7 @@ func (auth *SpotifyAuth) Login(w http.ResponseWriter, r *http.Request) {
 		"redirect_uri":  {auth.CallbackURL()},
 		"state":         {state},
 	}
-	url := "https://accounts.spotify.com/authorize?" + params.Encode()
+	url := auth.URL() + "/authorize?" + params.Encode()
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
@@ -78,7 +87,7 @@ func (auth *SpotifyAuth) getToken(code []string) (*Spotify, error) {
 		"client_id":     {auth.ClientId},
 		"client_secret": {auth.ClientSecret},
 	}
-	url := "https://accounts.spotify.com/api/token"
+	url := auth.URL() + "/api/token"
 	resp, err := http.PostForm(url, formData)
 	if err != nil {
 		return nil, err
