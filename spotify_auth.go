@@ -13,7 +13,7 @@ import (
 )
 
 const stateKey string = "spotify_auth_state"
-const scope string = "playlist-modify playlist-modify-private " +
+const scope string = "playlist-modify-public playlist-modify-private " +
 	"playlist-read-private"
 
 type SpotifyAuth struct {
