@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/docopt/docopt-go"
 	"github.com/martinp/nrk-spotify/nrk"
+	"github.com/martinp/nrk-spotify/server"
 	"github.com/martinp/nrk-spotify/spotify"
 	"log"
 	"strconv"
@@ -23,7 +24,7 @@ func makeSpotifyAuth(args map[string]interface{}) *spotify.SpotifyAuth {
 	}
 }
 
-func makeServer(args map[string]interface{}) (*SyncServer, error) {
+func makeServer(args map[string]interface{}) (*server.Sync, error) {
 	radioName := args["<name>"].(string)
 	radioID := args["<radio-id>"].(string)
 	tokenFile := args["--token-file"].(string)
@@ -56,7 +57,7 @@ func makeServer(args map[string]interface{}) (*SyncServer, error) {
 	if !radio.IsValidID() {
 		return nil, fmt.Errorf("'%s' is not a valid radio ID", radio.ID)
 	}
-	return &SyncServer{
+	return &server.Sync{
 		Spotify:   s,
 		Radio:     &radio,
 		Interval:  time.Duration(interval) * time.Minute,

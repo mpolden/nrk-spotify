@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"github.com/cenkalti/backoff"
@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type SyncServer struct {
+type Sync struct {
 	Spotify   *spotify.Spotify
 	Radio     *nrk.Radio
 	Interval  time.Duration
@@ -24,18 +24,18 @@ func logColorf(format string, v ...interface{}) {
 	log.Printf(colorstring.Color(format), v...)
 }
 
-func (sync *SyncServer) isCached(track *spotify.Track) bool {
+func (sync *Sync) isCached(track *spotify.Track) bool {
 	_, exists := sync.cache.Get(track.Id)
 	return exists
 }
 
-func (sync *SyncServer) addTrack(track *spotify.Track) {
+func (sync *Sync) addTrack(track *spotify.Track) {
 	if !sync.isCached(track) {
 		sync.cache.Add(track.Id, track)
 	}
 }
 
-func (sync *SyncServer) initPlaylist() error {
+func (sync *Sync) initPlaylist() error {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(5 * time.Minute)
 	ticker := backoff.NewTicker(b)
@@ -58,7 +58,7 @@ func (sync *SyncServer) initPlaylist() error {
 	return nil
 }
 
-func (sync *SyncServer) initCache() error {
+func (sync *Sync) initCache() error {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(5 * time.Minute)
 	ticker := backoff.NewTicker(b)
@@ -83,7 +83,7 @@ func (sync *SyncServer) initCache() error {
 	return nil
 }
 
-func (sync *SyncServer) Serve() {
+func (sync *Sync) Serve() {
 	log.Printf("Server started")
 
 	log.Print("Initializing Spotify playlist")
@@ -110,7 +110,7 @@ func (sync *SyncServer) Serve() {
 	}
 }
 
-func (sync *SyncServer) runForever() <-chan time.Time {
+func (sync *Sync) runForever() <-chan time.Time {
 	duration, err := sync.run()
 	if err != nil {
 		log.Printf("Sync failed: %s", err)
@@ -120,7 +120,7 @@ func (sync *SyncServer) runForever() <-chan time.Time {
 	return time.After(duration)
 }
 
-func (sync *SyncServer) retryPlaylist() (*nrk.Playlist, error) {
+func (sync *Sync) retryPlaylist() (*nrk.Playlist, error) {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(1 * time.Minute)
 	ticker := backoff.NewTicker(b)
@@ -138,7 +138,7 @@ func (sync *SyncServer) retryPlaylist() (*nrk.Playlist, error) {
 	return playlist, err
 }
 
-func (sync *SyncServer) retrySearch(track *nrk.Track) ([]spotify.Track, error) {
+func (sync *Sync) retrySearch(track *nrk.Track) ([]spotify.Track, error) {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(1 * time.Minute)
 	ticker := backoff.NewTicker(b)
@@ -157,7 +157,7 @@ func (sync *SyncServer) retrySearch(track *nrk.Track) ([]spotify.Track, error) {
 	return tracks, err
 }
 
-func (sync *SyncServer) retryAddTrack(track *spotify.Track) error {
+func (sync *Sync) retryAddTrack(track *spotify.Track) error {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(1 * time.Minute)
 	ticker := backoff.NewTicker(b)
@@ -174,7 +174,7 @@ func (sync *SyncServer) retryAddTrack(track *spotify.Track) error {
 	return err
 }
 
-func (sync *SyncServer) logCurrentTrack(playlist *nrk.Playlist) {
+func (sync *Sync) logCurrentTrack(playlist *nrk.Playlist) {
 	current, err := playlist.Current()
 	if err != nil {
 		logColorf("[red]Failed to get current track: %s[reset]", err)
@@ -190,7 +190,7 @@ func (sync *SyncServer) logCurrentTrack(playlist *nrk.Playlist) {
 		position.String(), position.Symbol(10, true))
 }
 
-func (sync *SyncServer) run() (time.Duration, error) {
+func (sync *Sync) run() (time.Duration, error) {
 	logColorf("[light_magenta]Running sync[reset]")
 
 	radioPlaylist, err := sync.retryPlaylist()
