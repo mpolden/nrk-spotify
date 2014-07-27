@@ -16,7 +16,8 @@ Listen to NRK radio channels in Spotify.
 
 Usage:
   nrk-spotify auth [-l <address>] [-f <file>] <client-id> <client-secret>
-  nrk-spotify server [-f <file>] [-i <interval>] [-a] [-c <max>] <name> <radio-id>
+  nrk-spotify server [-f <file>] [-i <minutes>] [-a] [-c <max>] <name> <radio-id>
+  nrk-spotify list
   nrk-spotify -h | --help
 
 Options:
@@ -39,6 +40,10 @@ Compile:
 Install:
 
 `$ PREFIX=/usr/local make install`
+
+...or if you prefer to use `go get`:
+
+`$ go get github.com/martinp/nrk-spotify`
 
 ## In action
 
@@ -65,11 +70,10 @@ can be stopped with `Ctrl+C`.
 
 ### Run the sync server
 
-Choose a playlist name and a radio channel to sync. The following radio IDs can
-be used:
+Choose a playlist name and a radio channel to sync. Available radio IDs can be
+listed with:
 
-`p1pluss p2 p3 p13 mp3 radio_super klassisk jazz folkemusikk urort
-radioresepsjonen national_rap_show pyro`
+`$ nrk-spotify list`
 
 Start sync server:
 
