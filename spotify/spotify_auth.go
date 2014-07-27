@@ -1,4 +1,4 @@
-package main
+package spotify
 
 import (
 	"crypto/rand"
@@ -21,7 +21,7 @@ type SpotifyAuth struct {
 	ClientId     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 	TokenFile    string `json:"token_file"`
-	listen       string
+	Listen       string
 	listenURL    string
 	url          string
 }
@@ -37,10 +37,10 @@ func (auth *SpotifyAuth) ListenURL() string {
 	if auth.listenURL != "" {
 		return auth.listenURL
 	}
-	if strings.HasPrefix(auth.listen, ":") {
-		return "http://localhost" + auth.listen
+	if strings.HasPrefix(auth.Listen, ":") {
+		return "http://localhost" + auth.Listen
 	}
-	return "http://" + auth.listen
+	return "http://" + auth.Listen
 }
 
 func (auth *SpotifyAuth) CallbackURL() string {
@@ -144,5 +144,5 @@ func (auth *SpotifyAuth) Serve() {
 	fmt.Printf(colorstring.Color(
 		"Visit [green]%s/login[reset] to authenticate "+
 			"with Spotify.\n"), auth.ListenURL())
-	http.ListenAndServe(auth.listen, nil)
+	http.ListenAndServe(auth.Listen, nil)
 }

@@ -1,4 +1,4 @@
-package main
+package nrk
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var radioIDs []string = []string{
+var IDs []string = []string{
 	"p1pluss",
 	"p2",
 	"p3",
@@ -216,8 +216,8 @@ func (radio *Radio) Playlist() (*RadioPlaylist, error) {
 	return &RadioPlaylist{Tracks: tracks}, nil
 }
 
-func (radio *Radio) isValidID() bool {
-	for _, id := range radioIDs {
+func (radio *Radio) IsValidID() bool {
+	for _, id := range IDs {
 		if id == radio.ID {
 			return true
 		}

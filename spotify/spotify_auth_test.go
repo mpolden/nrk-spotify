@@ -1,4 +1,4 @@
-package main
+package spotify
 
 import (
 	"fmt"
@@ -11,12 +11,12 @@ import (
 )
 
 func TestURL(t *testing.T) {
-	auth := SpotifyAuth{listen: ":8080"}
+	auth := SpotifyAuth{Listen: ":8080"}
 	if auth.ListenURL() != "http://localhost:8080" {
 		t.Fatalf("Expected http://localhost:8080, got %s",
 			auth.ListenURL())
 	}
-	auth = SpotifyAuth{listen: "1.2.3.4:8080"}
+	auth = SpotifyAuth{Listen: "1.2.3.4:8080"}
 	if auth.ListenURL() != "http://1.2.3.4:8080" {
 		t.Fatalf("Expected http://1.2.3.4:8080, got %s",
 			auth.ListenURL())
@@ -32,6 +32,16 @@ func TestAuthHeader(t *testing.T) {
 	if auth.authHeader() != expected {
 		t.Fatalf("Expected '%s', got '%s'", expected, auth.authHeader())
 	}
+}
+
+func newTestServer(path string, body string) *httptest.Server {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, body)
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc(path, handler)
+	return httptest.NewServer(mux)
 }
 
 func TestLogin(t *testing.T) {

@@ -3,21 +3,23 @@ package main
 import (
 	"fmt"
 	"github.com/docopt/docopt-go"
+	"github.com/martinp/nrk-spotify/nrk"
+	"github.com/martinp/nrk-spotify/spotify"
 	"log"
 	"strconv"
 	"time"
 )
 
-func makeSpotifyAuth(args map[string]interface{}) *SpotifyAuth {
+func makeSpotifyAuth(args map[string]interface{}) *spotify.SpotifyAuth {
 	clientId := args["<client-id>"].(string)
 	clientSecret := args["<client-secret>"].(string)
 	listen := args["--listen"].(string)
 	tokenFile := args["--token-file"].(string)
-	return &SpotifyAuth{
+	return &spotify.SpotifyAuth{
 		ClientId:     clientId,
 		ClientSecret: clientSecret,
 		TokenFile:    tokenFile,
-		listen:       listen,
+		Listen:       listen,
 	}
 }
 
@@ -37,25 +39,25 @@ func makeServer(args map[string]interface{}) (*SyncServer, error) {
 		return nil, fmt.Errorf(
 			"--cache-size must be an positive integer")
 	}
-	spotify, err := ReadToken(tokenFile)
+	s, err := spotify.ReadToken(tokenFile)
 	if err != nil {
 		return nil, err
 	}
 	// Set and save current user if profile is empty
-	if spotify.Profile.Id == "" {
-		if err := spotify.SetCurrentUser(); err != nil {
+	if s.Profile.Id == "" {
+		if err := s.SetCurrentUser(); err != nil {
 			return nil, err
 		}
 	}
-	radio := Radio{
+	radio := nrk.Radio{
 		Name: radioName,
 		ID:   radioID,
 	}
-	if !radio.isValidID() {
+	if !radio.IsValidID() {
 		return nil, fmt.Errorf("'%s' is not a valid radio ID", radio.ID)
 	}
 	return &SyncServer{
-		Spotify:   spotify,
+		Spotify:   s,
 		Radio:     &radio,
 		Interval:  time.Duration(interval) * time.Minute,
 		Adaptive:  adaptive,
@@ -95,7 +97,7 @@ Options:
 		server.Serve()
 	} else {
 		fmt.Println("Available radio IDs:")
-		for _, id := range radioIDs {
+		for _, id := range nrk.IDs {
 			fmt.Println(id)
 		}
 	}

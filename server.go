@@ -4,17 +4,19 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/golang/groupcache/lru"
 	"github.com/mitchellh/colorstring"
+	"github.com/martinp/nrk-spotify/spotify"
+	"github.com/martinp/nrk-spotify/nrk"
 	"log"
 	"time"
 )
 
 type SyncServer struct {
-	Spotify   *Spotify
-	Radio     *Radio
+	Spotify   *spotify.Spotify
+	Radio     *nrk.Radio
 	Interval  time.Duration
 	Adaptive  bool
 	CacheSize int
-	playlist  *Playlist
+	playlist  *spotify.Playlist
 	cache     *lru.Cache
 }
 
@@ -22,12 +24,12 @@ func logColorf(format string, v ...interface{}) {
 	log.Printf(colorstring.Color(format), v...)
 }
 
-func (sync *SyncServer) isCached(track *Track) bool {
+func (sync *SyncServer) isCached(track *spotify.Track) bool {
 	_, exists := sync.cache.Get(track.Id)
 	return exists
 }
 
-func (sync *SyncServer) addTrack(track *Track) {
+func (sync *SyncServer) addTrack(track *spotify.Track) {
 	if !sync.isCached(track) {
 		sync.cache.Add(track.Id, track)
 	}
@@ -37,7 +39,7 @@ func (sync *SyncServer) initPlaylist() error {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(5 * time.Minute)
 	ticker := backoff.NewTicker(b)
-	var playlist *Playlist
+	var playlist *spotify.Playlist
 	var err error
 	for _ = range ticker.C {
 		playlist, err = sync.Spotify.GetOrCreatePlaylist(
@@ -60,7 +62,7 @@ func (sync *SyncServer) initCache() error {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(5 * time.Minute)
 	ticker := backoff.NewTicker(b)
-	var tracks []PlaylistTrack
+	var tracks []spotify.PlaylistTrack
 	var err error
 	for _ = range ticker.C {
 		tracks, err = sync.Spotify.RecentTracks(sync.playlist)
@@ -118,11 +120,11 @@ func (sync *SyncServer) runForever() <-chan time.Time {
 	return time.After(duration)
 }
 
-func (sync *SyncServer) retryPlaylist() (*RadioPlaylist, error) {
+func (sync *SyncServer) retryPlaylist() (*nrk.RadioPlaylist, error) {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(1 * time.Minute)
 	ticker := backoff.NewTicker(b)
-	var playlist *RadioPlaylist
+	var playlist *nrk.RadioPlaylist
 	var err error
 	for _ = range ticker.C {
 		playlist, err = sync.Radio.Playlist()
@@ -136,11 +138,11 @@ func (sync *SyncServer) retryPlaylist() (*RadioPlaylist, error) {
 	return playlist, err
 }
 
-func (sync *SyncServer) retrySearch(track *RadioTrack) ([]Track, error) {
+func (sync *SyncServer) retrySearch(track *nrk.RadioTrack) ([]spotify.Track, error) {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(1 * time.Minute)
 	ticker := backoff.NewTicker(b)
-	var tracks []Track
+	var tracks []spotify.Track
 	var err error
 	for _ = range ticker.C {
 		tracks, err = sync.Spotify.SearchArtistTrack(track.Artist,
@@ -155,7 +157,7 @@ func (sync *SyncServer) retrySearch(track *RadioTrack) ([]Track, error) {
 	return tracks, err
 }
 
-func (sync *SyncServer) retryAddTrack(track *Track) error {
+func (sync *SyncServer) retryAddTrack(track *spotify.Track) error {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(1 * time.Minute)
 	ticker := backoff.NewTicker(b)
@@ -172,7 +174,7 @@ func (sync *SyncServer) retryAddTrack(track *Track) error {
 	return err
 }
 
-func (sync *SyncServer) logCurrentTrack(playlist *RadioPlaylist) {
+func (sync *SyncServer) logCurrentTrack(playlist *nrk.RadioPlaylist) {
 	current, err := playlist.Current()
 	if err != nil {
 		logColorf("[red]Failed to get current track: %s[reset]", err)
