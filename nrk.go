@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var radioIds []string = []string{
+var radioIDs []string = []string{
 	"p1pluss",
 	"p2",
 	"p3",
@@ -33,7 +33,7 @@ const defaultURL string = "http://v7.psapi.nrk.no"
 
 type Radio struct {
 	Name string
-	Id   string
+	ID   string
 	url  string
 }
 
@@ -59,34 +59,34 @@ func (radio *Radio) URL() string {
 	if url == "" {
 		url = defaultURL
 	}
-	return url + fmt.Sprintf("/channels/%s/liveelements/now", radio.Id)
+	return url + fmt.Sprintf("/channels/%s/liveelements/now", radio.ID)
 }
 
 func (playlist *RadioPlaylist) Previous() (*RadioTrack, error) {
 	if len(playlist.Tracks) > 0 {
 		return &playlist.Tracks[0], nil
 	}
-	return nil, fmt.Errorf("Previous track not found")
+	return nil, fmt.Errorf("previous track not found")
 }
 
 func (playlist *RadioPlaylist) Current() (*RadioTrack, error) {
 	if len(playlist.Tracks) > 1 {
 		return &playlist.Tracks[1], nil
 	}
-	return nil, fmt.Errorf("Current track not found")
+	return nil, fmt.Errorf("current track not found")
 }
 
 func (playlist *RadioPlaylist) Next() (*RadioTrack, error) {
 	if len(playlist.Tracks) > 2 {
 		return &playlist.Tracks[2], nil
 	}
-	return nil, fmt.Errorf("Next track not found")
+	return nil, fmt.Errorf("next track not found")
 }
 
 func (playlist *RadioPlaylist) CurrentAndNext() ([]RadioTrack, error) {
 	if len(playlist.Tracks) < 3 {
-		return nil, fmt.Errorf("Playlist contains %d tracks, could "+
-			"not determine current and next", len(playlist.Tracks))
+		return nil, fmt.Errorf("playlist only contains %d tracks",
+			len(playlist.Tracks))
 	}
 	return playlist.Tracks[1:], nil
 }
@@ -105,7 +105,7 @@ func (track *RadioTrack) StartTime() (time.Time, error) {
 		}
 		return time.Unix(timestamp/1000, 0), nil
 	}
-	return time.Time{}, fmt.Errorf("Could not parse start time")
+	return time.Time{}, fmt.Errorf("failed to parse start time")
 }
 
 func (track *RadioTrack) Duration() (time.Duration, error) {
@@ -216,9 +216,9 @@ func (radio *Radio) Playlist() (*RadioPlaylist, error) {
 	return &RadioPlaylist{Tracks: tracks}, nil
 }
 
-func (radio *Radio) isValidId() bool {
-	for _, id := range radioIds {
-		if id == radio.Id {
+func (radio *Radio) isValidID() bool {
+	for _, id := range radioIDs {
+		if id == radio.ID {
 			return true
 		}
 	}

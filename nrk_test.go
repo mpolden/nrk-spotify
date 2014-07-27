@@ -245,7 +245,7 @@ func newTestServer(path string, body string) *httptest.Server {
 func TestPlaylist(t *testing.T) {
 	server := newTestServer("/", testResponse)
 	defer server.Close()
-	r := Radio{Name: "P3 Pyro", Id: "pyro", url: server.URL}
+	r := Radio{Name: "P3 Pyro", ID: "pyro", url: server.URL}
 	playlist, err := r.Playlist()
 	if err != nil {
 		t.Fatal(err)
@@ -271,7 +271,7 @@ func TestPlaylist(t *testing.T) {
 func TestPlaylistInvalidResponse(t *testing.T) {
 	server := newTestServer("/", "gopher says: no JSON for you!")
 	defer server.Close()
-	r := Radio{Name: "P3 Pyro", Id: "pyro", url: server.URL}
+	r := Radio{Name: "P3 Pyro", ID: "pyro", url: server.URL}
 	_, err := r.Playlist()
 	if err == nil {
 		t.Fatal("Expected error for invalid JSON response")

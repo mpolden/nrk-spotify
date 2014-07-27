@@ -159,7 +159,7 @@ func (spotify *Spotify) get(url string) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode/100 != 2 {
-		return nil, fmt.Errorf("Request failed [%d]: %s",
+		return nil, fmt.Errorf("request failed (%d): %s",
 			resp.StatusCode, body)
 	}
 	return body, err
@@ -187,7 +187,7 @@ func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode/100 != 2 {
-		return nil, fmt.Errorf("Request failed [%d]: %s",
+		return nil, fmt.Errorf("request failed (%d): %s",
 			resp.StatusCode, data)
 	}
 	return data, err
@@ -327,12 +327,12 @@ func (spotify *Spotify) RecentTracks(playlist *Playlist) (
 	return playlistTracks.Items, nil
 }
 
-func (spotify *Spotify) Search(query string, types string, limit uint) ([]Track,
+func (spotify *Spotify) Search(query string, types string, limit int) ([]Track,
 	error) {
 	params := url.Values{
 		"q":     {query},
 		"type":  {types},
-		"limit": {strconv.Itoa(int(limit))},
+		"limit": {strconv.Itoa(limit)},
 	}
 	url := "https://api.spotify.com/v1/search?" + params.Encode()
 	body, err := spotify.get(url)
@@ -362,8 +362,8 @@ func (spotify *Spotify) AddTracks(playlist *Playlist, tracks []Track) error {
 		spotify.Profile.Id, playlist.Id)
 
 	uris := make([]string, len(tracks))
-	for idx, track := range tracks {
-		uris[idx] = track.Uri
+	for i, track := range tracks {
+		uris[i] = track.Uri
 	}
 	jsonUris, err := json.Marshal(uris)
 	if err != nil {

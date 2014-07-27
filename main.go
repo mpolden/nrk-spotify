@@ -23,7 +23,7 @@ func makeSpotifyAuth(args map[string]interface{}) *SpotifyAuth {
 
 func makeServer(args map[string]interface{}) (*SyncServer, error) {
 	radioName := args["<name>"].(string)
-	radioId := args["<radio-id>"].(string)
+	radioID := args["<radio-id>"].(string)
 	tokenFile := args["--token-file"].(string)
 	adaptive := args["--adaptive"].(bool)
 	intervalOpt := args["--interval"].(string)
@@ -49,10 +49,10 @@ func makeServer(args map[string]interface{}) (*SyncServer, error) {
 	}
 	radio := Radio{
 		Name: radioName,
-		Id:   radioId,
+		ID:   radioID,
 	}
-	if !radio.isValidId() {
-		return nil, fmt.Errorf("'%s' is not a valid radio ID", radio.Id)
+	if !radio.isValidID() {
+		return nil, fmt.Errorf("'%s' is not a valid radio ID", radio.ID)
 	}
 	return &SyncServer{
 		Spotify:   spotify,
@@ -95,7 +95,7 @@ Options:
 		server.Serve()
 	} else {
 		fmt.Println("Available radio IDs:")
-		for _, id := range radioIds {
+		for _, id := range radioIDs {
 			fmt.Println(id)
 		}
 	}
