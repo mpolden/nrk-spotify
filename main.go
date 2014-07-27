@@ -11,12 +11,12 @@ import (
 	"time"
 )
 
-func makeSpotifyAuth(args map[string]interface{}) *spotify.SpotifyAuth {
+func makeSpotifyAuth(args map[string]interface{}) *spotify.Auth {
 	clientId := args["<client-id>"].(string)
 	clientSecret := args["<client-secret>"].(string)
 	listen := args["--listen"].(string)
 	tokenFile := args["--token-file"].(string)
-	return &spotify.SpotifyAuth{
+	return &spotify.Auth{
 		ClientId:     clientId,
 		ClientSecret: clientSecret,
 		TokenFile:    tokenFile,
