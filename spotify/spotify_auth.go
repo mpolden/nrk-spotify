@@ -17,7 +17,7 @@ const stateKey string = "spotify_auth_state"
 const scope string = "playlist-modify-public playlist-modify-private " +
 	"playlist-read-private"
 
-type SpotifyAuth struct {
+type Auth struct {
 	ClientId     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 	TokenFile    string `json:"token_file"`
@@ -26,14 +26,14 @@ type SpotifyAuth struct {
 	url          string
 }
 
-func (auth *SpotifyAuth) URL() string {
+func (auth *Auth) URL() string {
 	if auth.url == "" {
 		return defaultAuthURL
 	}
 	return auth.url
 }
 
-func (auth *SpotifyAuth) ListenURL() string {
+func (auth *Auth) ListenURL() string {
 	if auth.listenURL != "" {
 		return auth.listenURL
 	}
@@ -43,11 +43,11 @@ func (auth *SpotifyAuth) ListenURL() string {
 	return "http://" + auth.Listen
 }
 
-func (auth *SpotifyAuth) CallbackURL() string {
+func (auth *Auth) CallbackURL() string {
 	return auth.ListenURL() + "/callback"
 }
 
-func (auth *SpotifyAuth) authHeader() string {
+func (auth *Auth) authHeader() string {
 	data := auth.ClientId + ":" + auth.ClientSecret
 	return "Basic " + base64.StdEncoding.EncodeToString(
 		[]byte(data))
@@ -62,7 +62,7 @@ func base64Rand(size uint) (string, error) {
 	return base64.StdEncoding.EncodeToString(b), nil
 }
 
-func (auth *SpotifyAuth) Login(w http.ResponseWriter, r *http.Request) {
+func (auth *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	state, err := base64Rand(32)
 	if err != nil {
 		http.Error(w, "Failed to generate state value", 400)
@@ -83,7 +83,7 @@ func (auth *SpotifyAuth) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
-func (auth *SpotifyAuth) getToken(code []string) (*Spotify, error) {
+func (auth *Auth) getToken(code []string) (*Spotify, error) {
 	formData := url.Values{
 		"code":          code,
 		"redirect_uri":  {auth.CallbackURL()},
@@ -109,7 +109,7 @@ func (auth *SpotifyAuth) getToken(code []string) (*Spotify, error) {
 	return &token, nil
 }
 
-func (auth *SpotifyAuth) Callback(w http.ResponseWriter, r *http.Request) {
+func (auth *Auth) Callback(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	state := params["state"]
 	cookie, _ := r.Cookie(stateKey)
@@ -138,7 +138,7 @@ func (auth *SpotifyAuth) Callback(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Success! Wrote token file to %s", auth.TokenFile)
 }
 
-func (auth *SpotifyAuth) Serve() {
+func (auth *Auth) Serve() {
 	http.HandleFunc("/login", auth.Login)
 	http.HandleFunc("/callback", auth.Callback)
 	fmt.Printf(colorstring.Color(

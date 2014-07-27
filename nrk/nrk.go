@@ -37,11 +37,11 @@ type Radio struct {
 	url  string
 }
 
-type RadioPlaylist struct {
-	Tracks []RadioTrack
+type Playlist struct {
+	Tracks []Track
 }
 
-type RadioTrack struct {
+type Track struct {
 	Track      string `json:"title"`
 	Artist     string `json:"description"`
 	Type       string `json:"type"`
@@ -62,28 +62,28 @@ func (radio *Radio) URL() string {
 	return url + fmt.Sprintf("/channels/%s/liveelements/now", radio.ID)
 }
 
-func (playlist *RadioPlaylist) Previous() (*RadioTrack, error) {
+func (playlist *Playlist) Previous() (*Track, error) {
 	if len(playlist.Tracks) > 0 {
 		return &playlist.Tracks[0], nil
 	}
 	return nil, fmt.Errorf("previous track not found")
 }
 
-func (playlist *RadioPlaylist) Current() (*RadioTrack, error) {
+func (playlist *Playlist) Current() (*Track, error) {
 	if len(playlist.Tracks) > 1 {
 		return &playlist.Tracks[1], nil
 	}
 	return nil, fmt.Errorf("current track not found")
 }
 
-func (playlist *RadioPlaylist) Next() (*RadioTrack, error) {
+func (playlist *Playlist) Next() (*Track, error) {
 	if len(playlist.Tracks) > 2 {
 		return &playlist.Tracks[2], nil
 	}
 	return nil, fmt.Errorf("next track not found")
 }
 
-func (playlist *RadioPlaylist) CurrentAndNext() ([]RadioTrack, error) {
+func (playlist *Playlist) CurrentAndNext() ([]Track, error) {
 	if len(playlist.Tracks) < 3 {
 		return nil, fmt.Errorf("playlist only contains %d tracks",
 			len(playlist.Tracks))
@@ -91,11 +91,11 @@ func (playlist *RadioPlaylist) CurrentAndNext() ([]RadioTrack, error) {
 	return playlist.Tracks[1:], nil
 }
 
-func (track *RadioTrack) IsMusic() bool {
+func (track *Track) IsMusic() bool {
 	return track.Type == "Music"
 }
 
-func (track *RadioTrack) StartTime() (time.Time, error) {
+func (track *Track) StartTime() (time.Time, error) {
 	re := regexp.MustCompile("^/Date\\((\\d+)\\+\\d+\\)/$")
 	matches := re.FindAllStringSubmatch(track.StartTime_, 2)
 	if len(matches) > 0 && len(matches[0]) == 2 {
@@ -108,7 +108,7 @@ func (track *RadioTrack) StartTime() (time.Time, error) {
 	return time.Time{}, fmt.Errorf("failed to parse start time")
 }
 
-func (track *RadioTrack) Duration() (time.Duration, error) {
+func (track *Track) Duration() (time.Duration, error) {
 	duration := strings.ToLower(track.Duration_)
 	if strings.HasPrefix(duration, "pt") {
 		duration = duration[2:]
@@ -116,7 +116,7 @@ func (track *RadioTrack) Duration() (time.Duration, error) {
 	return time.ParseDuration(duration)
 }
 
-func (track *RadioTrack) Position() (Position, error) {
+func (track *Track) Position() (Position, error) {
 	startTime, err := track.StartTime()
 	if err != nil {
 		return Position{}, err
@@ -142,7 +142,7 @@ func (track *RadioTrack) Position() (Position, error) {
 	}, nil
 }
 
-func (track *RadioTrack) String() string {
+func (track *Track) String() string {
 	return fmt.Sprintf("%s - %s", track.Artist, track.Track)
 }
 
@@ -178,7 +178,7 @@ func (position *Position) Symbol(scale int, colorize bool) string {
 	return elapsedSymbol + remainingSymbol
 }
 
-func (playlist *RadioPlaylist) NextSync() (time.Duration, error) {
+func (playlist *Playlist) NextSync() (time.Duration, error) {
 	current, err := playlist.Current()
 	if err != nil {
 		return time.Duration(0), err
@@ -199,7 +199,7 @@ func (playlist *RadioPlaylist) NextSync() (time.Duration, error) {
 	return remaining + nextDuration, nil
 }
 
-func (radio *Radio) Playlist() (*RadioPlaylist, error) {
+func (radio *Radio) Playlist() (*Playlist, error) {
 	resp, err := http.Get(radio.URL())
 	if err != nil {
 		return nil, err
@@ -209,11 +209,11 @@ func (radio *Radio) Playlist() (*RadioPlaylist, error) {
 	if err != nil {
 		return nil, err
 	}
-	var tracks []RadioTrack
+	var tracks []Track
 	if err := json.Unmarshal(body, &tracks); err != nil {
 		return nil, err
 	}
-	return &RadioPlaylist{Tracks: tracks}, nil
+	return &Playlist{Tracks: tracks}, nil
 }
 
 func (radio *Radio) IsValidID() bool {

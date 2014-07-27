@@ -11,15 +11,15 @@ import (
 )
 
 type Spotify struct {
-	AccessToken  string         `json:"access_token"`
-	TokenType    string         `json:"token_type"`
-	ExpiresIn    int            `json:"expires_in"`
-	RefreshToken string         `json:"refresh_token"`
-	Auth         SpotifyAuth    `json:"auth"`
-	Profile      SpotifyProfile `json:"profile"`
+	AccessToken  string  `json:"access_token"`
+	TokenType    string  `json:"token_type"`
+	ExpiresIn    int     `json:"expires_in"`
+	RefreshToken string  `json:"refresh_token"`
+	Auth         Auth    `json:"auth"`
+	Profile      Profile `json:"profile"`
 }
 
-type SpotifyProfile struct {
+type Profile struct {
 	ExternalUrls map[string]string `json:"external_urls"`
 	Href         string            `json:"href"`
 	Id           string            `json:"id"`
@@ -217,13 +217,13 @@ func ReadToken(filepath string) (*Spotify, error) {
 	return &spotify, nil
 }
 
-func (spotify *Spotify) CurrentUser() (*SpotifyProfile, error) {
+func (spotify *Spotify) CurrentUser() (*Profile, error) {
 	url := "https://api.spotify.com/v1/me"
 	body, err := spotify.get(url)
 	if err != nil {
 		return nil, err
 	}
-	var profile SpotifyProfile
+	var profile Profile
 	if err := json.Unmarshal(body, &profile); err != nil {
 		return nil, err
 	}

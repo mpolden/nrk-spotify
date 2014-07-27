@@ -11,12 +11,12 @@ import (
 )
 
 func TestURL(t *testing.T) {
-	auth := SpotifyAuth{Listen: ":8080"}
+	auth := Auth{Listen: ":8080"}
 	if auth.ListenURL() != "http://localhost:8080" {
 		t.Fatalf("Expected http://localhost:8080, got %s",
 			auth.ListenURL())
 	}
-	auth = SpotifyAuth{Listen: "1.2.3.4:8080"}
+	auth = Auth{Listen: "1.2.3.4:8080"}
 	if auth.ListenURL() != "http://1.2.3.4:8080" {
 		t.Fatalf("Expected http://1.2.3.4:8080, got %s",
 			auth.ListenURL())
@@ -24,7 +24,7 @@ func TestURL(t *testing.T) {
 }
 
 func TestAuthHeader(t *testing.T) {
-	auth := SpotifyAuth{
+	auth := Auth{
 		ClientId:     "foo",
 		ClientSecret: "bar",
 	}
@@ -45,7 +45,7 @@ func newTestServer(path string, body string) *httptest.Server {
 }
 
 func TestLogin(t *testing.T) {
-	auth := SpotifyAuth{
+	auth := Auth{
 		ClientId:     "foo",
 		ClientSecret: "bar",
 	}
@@ -111,7 +111,7 @@ func TestLogin(t *testing.T) {
 func TestGetToken(t *testing.T) {
 	server := newTestServer("/api/token", tokenResponse)
 	defer server.Close()
-	auth := SpotifyAuth{
+	auth := Auth{
 		ClientId:     "foo",
 		ClientSecret: "bar",
 		url:          server.URL,
@@ -150,7 +150,7 @@ func TestCallback(t *testing.T) {
 			t.Fatal(err)
 		}
 	}()
-	auth := SpotifyAuth{
+	auth := Auth{
 		ClientId:     "foo",
 		ClientSecret: "bar",
 		TokenFile:    tempFile.Name(),

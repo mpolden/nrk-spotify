@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-func testTrack() RadioTrack {
-	return RadioTrack{
+func testTrack() Track {
+	return Track{
 		Track:      "Like a Rolling Stone",
 		Artist:     "Bob Dylan",
 		Type:       "Music",
@@ -185,8 +185,8 @@ func TestNextSync(t *testing.T) {
 	nextTrack := testTrack()
 	nextTrack.Duration_ = "PT3M37S"
 
-	playlist := RadioPlaylist{
-		Tracks: []RadioTrack{RadioTrack{}, currentTrack, nextTrack},
+	playlist := Playlist{
+		Tracks: []Track{Track{}, currentTrack, nextTrack},
 	}
 
 	nextSync, err := playlist.NextSync()
@@ -201,12 +201,12 @@ func TestNextSync(t *testing.T) {
 }
 
 func TestCurrentAndNext(t *testing.T) {
-	tracks := []RadioTrack{
-		RadioTrack{Track: "A"},
-		RadioTrack{Track: "B"},
-		RadioTrack{Track: "C"},
+	tracks := []Track{
+		Track{Track: "A"},
+		Track{Track: "B"},
+		Track{Track: "C"},
 	}
-	playlist := RadioPlaylist{Tracks: tracks}
+	playlist := Playlist{Tracks: tracks}
 	currentAndNext, err := playlist.CurrentAndNext()
 	if err != nil {
 		t.Fatalf("Failed to get current and next track")
@@ -222,10 +222,10 @@ func TestCurrentAndNext(t *testing.T) {
 }
 
 func TestCurrentAndNextInvalidLength(t *testing.T) {
-	tracks := []RadioTrack{
-		RadioTrack{Track: "A"},
+	tracks := []Track{
+		Track{Track: "A"},
 	}
-	playlist := RadioPlaylist{Tracks: tracks}
+	playlist := Playlist{Tracks: tracks}
 	_, err := playlist.CurrentAndNext()
 	if err == nil {
 		t.Fatalf("Expected error for playlist length < 3")

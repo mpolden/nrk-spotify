@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/cenkalti/backoff"
 	"github.com/golang/groupcache/lru"
-	"github.com/mitchellh/colorstring"
-	"github.com/martinp/nrk-spotify/spotify"
 	"github.com/martinp/nrk-spotify/nrk"
+	"github.com/martinp/nrk-spotify/spotify"
+	"github.com/mitchellh/colorstring"
 	"log"
 	"time"
 )
@@ -120,11 +120,11 @@ func (sync *SyncServer) runForever() <-chan time.Time {
 	return time.After(duration)
 }
 
-func (sync *SyncServer) retryPlaylist() (*nrk.RadioPlaylist, error) {
+func (sync *SyncServer) retryPlaylist() (*nrk.Playlist, error) {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(1 * time.Minute)
 	ticker := backoff.NewTicker(b)
-	var playlist *nrk.RadioPlaylist
+	var playlist *nrk.Playlist
 	var err error
 	for _ = range ticker.C {
 		playlist, err = sync.Radio.Playlist()
@@ -138,7 +138,7 @@ func (sync *SyncServer) retryPlaylist() (*nrk.RadioPlaylist, error) {
 	return playlist, err
 }
 
-func (sync *SyncServer) retrySearch(track *nrk.RadioTrack) ([]spotify.Track, error) {
+func (sync *SyncServer) retrySearch(track *nrk.Track) ([]spotify.Track, error) {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(1 * time.Minute)
 	ticker := backoff.NewTicker(b)
@@ -174,7 +174,7 @@ func (sync *SyncServer) retryAddTrack(track *spotify.Track) error {
 	return err
 }
 
-func (sync *SyncServer) logCurrentTrack(playlist *nrk.RadioPlaylist) {
+func (sync *SyncServer) logCurrentTrack(playlist *nrk.Playlist) {
 	current, err := playlist.Current()
 	if err != nil {
 		logColorf("[red]Failed to get current track: %s[reset]", err)
