@@ -1,21 +1,22 @@
 PREFIX ?= /usr/local
-GO=go
 NAME=nrk-spotify
 
 all: test build
 
 fmt:
-	gofmt -w=true *.go
+	find . -maxdepth 2 -name '*.go' -exec gofmt -w=true {} \;
 
 deps:
-	$(GO) get -d -v
+	@mkdir -p src/github.com/martinp
+	@ln -sfn $(CURDIR) src/github.com/martinp/$(NAME)
+	go get -d -v
 
 build:
 	@mkdir -p bin
-	$(GO) build -o bin/$(NAME)
+	go build -o bin/$(NAME)
 
 install:
 	cp -p bin/$(NAME) $(PREFIX)/bin/$(NAME)
 
 test:
-	$(GO) test
+	@find . -maxdepth 2 -name '*_test.go' -printf "%h\n" | xargs go test
