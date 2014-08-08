@@ -193,10 +193,10 @@ func (position *Position) Symbol(scale int, colorize bool) string {
 	return elapsedSymbol + remainingSymbol
 }
 
-func (playlist *Playlist) NextSync(tracks []*Track) (time.Duration, error) {
+func (playlist *Playlist) NextSync(tracks []Track) (time.Duration, error) {
 	total := time.Duration(0)
 	for _, track := range tracks {
-		duration, err := playlist.Remaining(track)
+		duration, err := playlist.Remaining(&track)
 		if err != nil {
 			return time.Duration(0), err
 		}

@@ -203,7 +203,7 @@ func (sync *Sync) run() (time.Duration, error) {
 	if err != nil {
 		return time.Duration(0), err
 	}
-	added := make([]*nrk.Track, 0, len(radioTracks))
+	added := make([]nrk.Track, 0, len(radioTracks))
 	for _, t := range radioTracks {
 		logColorf("Searching for: %s", t.String())
 		if !t.IsMusic() {
@@ -226,7 +226,7 @@ func (sync *Sync) run() (time.Duration, error) {
 		if sync.isCached(track) {
 			logColorf("[yellow]Already added: %s[reset]",
 				track.String())
-			added = append(added, &t)
+			added = append(added, t)
 			continue
 		}
 		if err = sync.retryAddTrack(track); err != nil {
@@ -235,7 +235,8 @@ func (sync *Sync) run() (time.Duration, error) {
 			continue
 		}
 		sync.addTrack(track)
-		added = append(added, &t)
+		added = append(added, t)
+
 		logColorf("[green]Added track: %s[reset]", track.String())
 	}
 	log.Printf("Cache size: %d/%d", sync.cache.Len(),

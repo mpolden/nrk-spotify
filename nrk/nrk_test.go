@@ -189,7 +189,7 @@ func TestNextSync(t *testing.T) {
 		Tracks: []Track{Track{}, currentTrack, nextTrack},
 	}
 
-	tracks := []*Track{&currentTrack, &nextTrack}
+	tracks := []Track{currentTrack, nextTrack}
 	nextSync, err := playlist.NextSync(tracks)
 	if err != nil {
 		t.Fatal(err)
