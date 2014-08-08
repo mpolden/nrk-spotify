@@ -203,7 +203,7 @@ func (sync *Sync) run() (time.Duration, error) {
 	if err != nil {
 		return time.Duration(0), err
 	}
-	added := make([]*nrk.Track, len(radioTracks))
+	added := make([]*nrk.Track, 0, len(radioTracks))
 	for _, t := range radioTracks {
 		logColorf("Searching for: %s", t.String())
 		if !t.IsMusic() {
