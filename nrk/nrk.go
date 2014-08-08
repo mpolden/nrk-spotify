@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var IDs []string = []string{
+var ids = [...]string{
 	"p1pluss",
 	"p2",
 	"p3",
@@ -52,6 +52,10 @@ type Track struct {
 type Position struct {
 	Position time.Duration
 	Duration time.Duration
+}
+
+func IDs() [13]string {
+	return ids
 }
 
 func (radio *Radio) URL() string {
@@ -217,7 +221,7 @@ func (radio *Radio) Playlist() (*Playlist, error) {
 }
 
 func (radio *Radio) IsValidID() bool {
-	for _, id := range IDs {
+	for _, id := range ids {
 		if id == radio.ID {
 			return true
 		}

@@ -98,7 +98,7 @@ Options:
 		server.Serve()
 	} else {
 		fmt.Println("Available radio IDs:")
-		for _, id := range nrk.IDs {
+		for _, id := range nrk.IDs() {
 			fmt.Println(id)
 		}
 	}
