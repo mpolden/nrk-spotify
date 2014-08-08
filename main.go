@@ -40,26 +40,17 @@ func makeServer(args map[string]interface{}) (*server.Sync, error) {
 		return nil, fmt.Errorf(
 			"--cache-size must be an positive integer")
 	}
-	s, err := spotify.ReadToken(tokenFile)
+	s, err := spotify.New(tokenFile)
 	if err != nil {
 		return nil, err
 	}
-	// Set and save current user if profile is empty
-	if s.Profile.Id == "" {
-		if err := s.SetCurrentUser(); err != nil {
-			return nil, err
-		}
-	}
-	radio := nrk.Radio{
-		Name: radioName,
-		ID:   radioID,
-	}
-	if !radio.IsValidID() {
-		return nil, fmt.Errorf("'%s' is not a valid radio ID", radio.ID)
+	radio, err := nrk.New(radioName, radioID)
+	if err != nil {
+		return nil, err
 	}
 	return &server.Sync{
 		Spotify:   s,
-		Radio:     &radio,
+		Radio:     radio,
 		Interval:  time.Duration(interval) * time.Minute,
 		Adaptive:  adaptive,
 		CacheSize: cacheSize,

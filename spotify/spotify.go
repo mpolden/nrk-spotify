@@ -205,7 +205,7 @@ func (spotify *Spotify) Save(filepath string) error {
 	return nil
 }
 
-func ReadToken(filepath string) (*Spotify, error) {
+func New(filepath string) (*Spotify, error) {
 	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return nil, err
@@ -213,6 +213,11 @@ func ReadToken(filepath string) (*Spotify, error) {
 	var spotify Spotify
 	if err := json.Unmarshal(data, &spotify); err != nil {
 		return nil, err
+	}
+	if spotify.Profile.Id == "" {
+		if err := spotify.SetCurrentUser(); err != nil {
+			return nil, err
+		}
 	}
 	return &spotify, nil
 }
@@ -373,7 +378,6 @@ func (spotify *Spotify) AddTracks(playlist *Playlist, tracks []Track) error {
 		return err
 	}
 	return nil
-
 }
 
 func (spotify *Spotify) AddTrack(playlist *Playlist, track *Track) error {

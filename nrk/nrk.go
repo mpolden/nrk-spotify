@@ -58,6 +58,17 @@ func IDs() [13]string {
 	return ids
 }
 
+func New(name string, id string) (*Radio, error) {
+	radio := Radio{
+		Name: name,
+		ID:   id,
+	}
+	if !radio.isValidID() {
+		return nil, fmt.Errorf("%s is not a valid radio ID", radio.ID)
+	}
+	return &radio, nil
+}
+
 func (radio *Radio) URL() string {
 	url := radio.url
 	if url == "" {
@@ -220,7 +231,7 @@ func (radio *Radio) Playlist() (*Playlist, error) {
 	return &Playlist{Tracks: tracks}, nil
 }
 
-func (radio *Radio) IsValidID() bool {
+func (radio *Radio) isValidID() bool {
 	for _, id := range ids {
 		if id == radio.ID {
 			return true
