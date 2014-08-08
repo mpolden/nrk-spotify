@@ -193,25 +193,35 @@ func (position *Position) Symbol(scale int, colorize bool) string {
 	return elapsedSymbol + remainingSymbol
 }
 
-func (playlist *Playlist) NextSync() (time.Duration, error) {
+func (playlist *Playlist) NextSync(tracks []*Track) (time.Duration, error) {
+	total := time.Duration(0)
+	for _, track := range tracks {
+		duration, err := playlist.Remaining(track)
+		if err != nil {
+			return time.Duration(0), err
+		}
+		total += duration
+	}
+	return total, nil
+}
+
+func (playlist *Playlist) Remaining(track *Track) (time.Duration, error) {
 	current, err := playlist.Current()
 	if err != nil {
 		return time.Duration(0), err
 	}
-	next, err := playlist.Next()
+	if *current == *track {
+		position, err := current.Position()
+		if err != nil {
+			return time.Duration(0), err
+		}
+		return position.Duration - position.Position, nil
+	}
+	duration, err := track.Duration()
 	if err != nil {
 		return time.Duration(0), err
 	}
-	position, err := current.Position()
-	if err != nil {
-		return time.Duration(0), err
-	}
-	nextDuration, err := next.Duration()
-	if err != nil {
-		return time.Duration(0), err
-	}
-	remaining := position.Duration - position.Position
-	return remaining + nextDuration, nil
+	return duration, nil
 }
 
 func (radio *Radio) Playlist() (*Playlist, error) {

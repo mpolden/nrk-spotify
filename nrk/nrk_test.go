@@ -189,14 +189,43 @@ func TestNextSync(t *testing.T) {
 		Tracks: []Track{Track{}, currentTrack, nextTrack},
 	}
 
-	nextSync, err := playlist.NextSync()
+	tracks := []*Track{&currentTrack, &nextTrack}
+	nextSync, err := playlist.NextSync(tracks)
 	if err != nil {
-		t.Fatalf("Failed to find next sync time: %s", err)
+		t.Fatal(err)
 	}
 	expected := time.Duration(9*time.Minute) +
 		time.Duration(5*time.Second)
 	if nextSync != expected {
 		t.Fatalf("Expected %s, got %s", expected, nextSync)
+	}
+}
+
+func TestRemaining(t *testing.T) {
+	currentTrack := testTrack()
+	currentTrack.StartTime_ = fmt.Sprintf("/Date(%d000+0200)/",
+		time.Now().Unix()-42)
+
+	nextTrack := testTrack()
+	nextTrack.Duration_ = "PT3M37S"
+
+	playlist := Playlist{
+		Tracks: []Track{Track{}, currentTrack, nextTrack},
+	}
+
+	currentDuration, err := playlist.Remaining(&currentTrack)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := time.Duration(5*time.Minute) + time.Duration(28*time.Second)
+	if currentDuration != expected {
+		t.Fatalf("Expected %s, got %s", expected, currentDuration)
+	}
+
+	nextDuration, err := playlist.Remaining(&nextTrack)
+	expected = time.Duration(3*time.Minute) + time.Duration(37*time.Second)
+	if nextDuration != expected {
+		t.Fatalf("Expected %s, got %s", expected, nextDuration)
 	}
 }
 
