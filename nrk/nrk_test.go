@@ -201,6 +201,22 @@ func TestNextSync(t *testing.T) {
 	}
 }
 
+func TestNextSync_Zero(t *testing.T) {
+	currentTrack := testTrack()
+	// At the end of current track
+	currentTrack.StartTime_ = fmt.Sprintf("/Date(%d000+0200)/",
+		time.Now().Unix()-370)
+
+	playlist := Playlist{
+		Tracks: []Track{Track{}, currentTrack, Track{}},
+	}
+	tracks := []Track{currentTrack}
+	_, err := playlist.NextSync(tracks)
+	if err == nil {
+		t.Fatal("Expected error")
+	}
+}
+
 func TestRemaining(t *testing.T) {
 	currentTrack := testTrack()
 	currentTrack.StartTime_ = fmt.Sprintf("/Date(%d000+0200)/",

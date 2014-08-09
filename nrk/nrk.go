@@ -202,6 +202,9 @@ func (playlist *Playlist) NextSync(tracks []Track) (time.Duration, error) {
 		}
 		total += duration
 	}
+	if total == 0 {
+		return time.Duration(0), fmt.Errorf("duration sum is zero")
+	}
 	return total, nil
 }
 
