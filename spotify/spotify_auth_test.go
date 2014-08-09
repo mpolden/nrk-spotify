@@ -11,6 +11,17 @@ import (
 )
 
 func TestURL(t *testing.T) {
+	auth := Auth{}
+	if url := auth.URL(); url != "https://accounts.spotify.com" {
+		t.Fatalf("Expected https://accounts.spotify.com, got %s", url)
+	}
+	auth = Auth{url: "http://127.0.0.1"}
+	if url := auth.URL(); url != "http://127.0.0.1" {
+		t.Fatalf("Expected http://127.0.0.1, got %s", url)
+	}
+}
+
+func TestListenURL(t *testing.T) {
 	auth := Auth{Listen: ":8080"}
 	if auth.ListenURL() != "http://localhost:8080" {
 		t.Fatalf("Expected http://localhost:8080, got %s",
@@ -23,6 +34,13 @@ func TestURL(t *testing.T) {
 	}
 }
 
+func TestCallbackURL(t *testing.T) {
+	auth := Auth{Listen: ":8080"}
+	if url := auth.CallbackURL(); url != "http://localhost:8080/callback" {
+		t.Fatalf("Expected http://localhost:8080/callback, got %s", url)
+	}
+}
+
 func TestAuthHeader(t *testing.T) {
 	auth := Auth{
 		ClientId:     "foo",
@@ -31,6 +49,13 @@ func TestAuthHeader(t *testing.T) {
 	expected := "Basic Zm9vOmJhcg==" // base64("foo:bar")
 	if auth.authHeader() != expected {
 		t.Fatalf("Expected '%s', got '%s'", expected, auth.authHeader())
+	}
+}
+
+func TestBase64Rand(t *testing.T) {
+	_, err := base64Rand(10)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 

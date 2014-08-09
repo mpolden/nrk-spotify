@@ -53,7 +53,7 @@ func (auth *Auth) authHeader() string {
 		[]byte(data))
 }
 
-func base64Rand(size uint) (string, error) {
+func base64Rand(size int) (string, error) {
 	b := make([]byte, size)
 	_, err := rand.Read(b)
 	if err != nil {
