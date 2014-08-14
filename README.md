@@ -16,7 +16,7 @@ Listen to NRK radio channels in Spotify.
 
 Usage:
   nrk-spotify auth [-l <address>] [-f <file>] <client-id> <client-secret>
-  nrk-spotify server [-f <file>] [-i <minutes>] [-a] [-c <max>] <name> <radio-id>
+  nrk-spotify server [-f <file>] [-i <minutes>] [-a] [-d] [-c <max>] <name> <radio-id>
   nrk-spotify list
   nrk-spotify -h | --help
 
@@ -27,6 +27,7 @@ Options:
   -i --interval=<minutes>  Polling interval [default: 5]
   -c --cache-size=<max>    Max entries to keep in cache [default: 100]
   -a --adaptive            Automatically determine sync interval
+  -d --delete-evicted      Delete evicted (uncached) tracks from playlist
 ```
 
 ## Compiling and installing
