@@ -91,8 +91,7 @@ func (sync *Sync) initCache() error {
 	}
 	sync.cache = lru.New(sync.CacheSize)
 	if sync.DeleteEvicted {
-		log.Print("Deleting tracks from playlist when they are " +
-			"removed from cache")
+		log.Print("Deleting evicted tracks from playlist")
 		sync.cache.OnEvicted = sync.deleteEvicted
 	}
 	for _, t := range tracks {
