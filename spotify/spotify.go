@@ -130,6 +130,10 @@ type requestFn func() (*http.Response, error)
 
 func (spotify *Spotify) request(reqFn requestFn) ([]byte, error) {
 	resp, err := reqFn()
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
 	if resp.StatusCode == 401 {
 		if err := spotify.updateToken(); err != nil {
 			return nil, err
@@ -138,8 +142,11 @@ func (spotify *Spotify) request(reqFn requestFn) ([]byte, error) {
 			return nil, err
 		}
 		resp, err = reqFn()
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
 	}
-	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
