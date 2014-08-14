@@ -193,6 +193,35 @@ func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
 	return data, err
 }
 
+func (spotify *Spotify) delete(url string, body []byte) ([]byte, error) {
+	deleteFn := func() (*http.Response, error) {
+		client := &http.Client{}
+		req, err := http.NewRequest("DELETE", url,
+			bytes.NewBuffer(body))
+		req.Header.Set("Authorization", spotify.authHeader())
+		req.Header.Set("Content-Type", "application/json")
+		if err != nil {
+			return nil, err
+		}
+		return client.Do(req)
+	}
+	resp, err := deleteFn()
+	if err != nil {
+		return nil, err
+	}
+	resp, err = spotify.refreshToken(resp, err, deleteFn)
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode/100 != 2 {
+		return nil, fmt.Errorf("request failed (%d): %s",
+			resp.StatusCode, data)
+	}
+	return data, err
+}
+
 func (spotify *Spotify) Save(filepath string) error {
 	json, err := json.Marshal(spotify)
 	if err != nil {
@@ -395,6 +424,30 @@ func (spotify *Spotify) SetCurrentUser() error {
 	}
 	spotify.Profile = *profile
 	if err := spotify.Save(spotify.Auth.TokenFile); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (spotify *Spotify) DeleteTracks(playlist *Playlist, tracks []Track) error {
+	url := fmt.Sprintf(
+		"https://api.spotify.com/v1/users/%s/playlists/%s/tracks",
+		spotify.Profile.Id, playlist.Id)
+
+	uris := make([]map[string]string, len(tracks))
+	for i, track := range tracks {
+		uris[i] = map[string]string{
+			"uri": track.Uri,
+		}
+	}
+	trackUris := map[string][]map[string]string{
+		"tracks": uris,
+	}
+	jsonUris, err := json.Marshal(trackUris)
+	if err != nil {
+		return err
+	}
+	if _, err := spotify.delete(url, jsonUris); err != nil {
 		return err
 	}
 	return nil
