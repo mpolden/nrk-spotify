@@ -11,12 +11,16 @@ import (
 )
 
 type Spotify struct {
-	AccessToken  string  `json:"access_token"`
-	TokenType    string  `json:"token_type"`
-	ExpiresIn    int     `json:"expires_in"`
-	RefreshToken string  `json:"refresh_token"`
-	Auth         Auth    `json:"auth"`
-	Profile      Profile `json:"profile"`
+	Token   `json:"token"`
+	Auth    `json:"auth"`
+	Profile `json:"profile"`
+}
+
+type Token struct {
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type Profile struct {

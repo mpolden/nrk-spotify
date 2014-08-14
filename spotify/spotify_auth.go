@@ -101,12 +101,14 @@ func (auth *Auth) getToken(code []string) (*Spotify, error) {
 	if err != nil {
 		return nil, err
 	}
-	var token Spotify
+	var token Token
 	if err := json.Unmarshal(body, &token); err != nil {
 		return nil, err
 	}
-	token.Auth = *auth
-	return &token, nil
+	return &Spotify{
+		Auth:  *auth,
+		Token: token,
+	}, nil
 }
 
 func (auth *Auth) Callback(w http.ResponseWriter, r *http.Request) {

@@ -146,22 +146,22 @@ func TestGetToken(t *testing.T) {
 		t.Fatal(err)
 	}
 	expected := "NgCXRK...MzYjw"
-	if spotify.AccessToken != expected {
+	if spotify.Token.AccessToken != expected {
 		t.Fatalf("Expected '%s', got '%s'",
-			expected, spotify.AccessToken)
+			expected, spotify.Token.AccessToken)
 	}
 	expected = "Bearer"
-	if spotify.TokenType != expected {
+	if spotify.Token.TokenType != expected {
 		t.Fatalf("Expected '%s', got '%s'",
-			expected, spotify.TokenType)
+			expected, spotify.Token.TokenType)
 	}
-	if spotify.ExpiresIn != 3600 {
-		t.Fatalf("Expected 3600, got %d", spotify.ExpiresIn)
+	if spotify.Token.ExpiresIn != 3600 {
+		t.Fatalf("Expected 3600, got %d", spotify.Token.ExpiresIn)
 	}
 	expected = "NgAagA...Um_SHo"
-	if spotify.RefreshToken != expected {
+	if spotify.Token.RefreshToken != expected {
 		t.Fatalf("Expected '%s', got '%s'",
-			expected, spotify.RefreshToken)
+			expected, spotify.Token.RefreshToken)
 	}
 }
 
