@@ -124,8 +124,8 @@ func (spotify *Spotify) authHeader() string {
 
 type requestFn func() (*http.Response, error)
 
-func (spotify *Spotify) refreshToken(resp *http.Response, err error,
-	reqFn requestFn) (*http.Response, error) {
+func (spotify *Spotify) request(reqFn requestFn) ([]byte, error) {
+	resp, err := reqFn()
 	if resp.StatusCode == 401 {
 		if err := spotify.updateToken(); err != nil {
 			return nil, err
@@ -133,9 +133,18 @@ func (spotify *Spotify) refreshToken(resp *http.Response, err error,
 		if err := spotify.Save(spotify.Auth.TokenFile); err != nil {
 			return nil, err
 		}
-		return reqFn()
+		resp, err = reqFn()
 	}
-	return resp, err
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode/100 != 2 {
+		return nil, fmt.Errorf("request failed (%d): %s",
+			resp.StatusCode, body)
+	}
+	return body, err
 }
 
 func (spotify *Spotify) get(url string) ([]byte, error) {
@@ -148,21 +157,7 @@ func (spotify *Spotify) get(url string) ([]byte, error) {
 		}
 		return client.Do(req)
 	}
-	resp, err := getFn()
-	if err != nil {
-		return nil, err
-	}
-	resp, err = spotify.refreshToken(resp, err, getFn)
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode/100 != 2 {
-		return nil, fmt.Errorf("request failed (%d): %s",
-			resp.StatusCode, body)
-	}
-	return body, err
+	return spotify.request(getFn)
 }
 
 func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
@@ -176,21 +171,7 @@ func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
 		}
 		return client.Do(req)
 	}
-	resp, err := postFn()
-	if err != nil {
-		return nil, err
-	}
-	resp, err = spotify.refreshToken(resp, err, postFn)
-	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode/100 != 2 {
-		return nil, fmt.Errorf("request failed (%d): %s",
-			resp.StatusCode, data)
-	}
-	return data, err
+	return spotify.request(postFn)
 }
 
 func (spotify *Spotify) delete(url string, body []byte) ([]byte, error) {
@@ -205,21 +186,7 @@ func (spotify *Spotify) delete(url string, body []byte) ([]byte, error) {
 		}
 		return client.Do(req)
 	}
-	resp, err := deleteFn()
-	if err != nil {
-		return nil, err
-	}
-	resp, err = spotify.refreshToken(resp, err, deleteFn)
-	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode/100 != 2 {
-		return nil, fmt.Errorf("request failed (%d): %s",
-			resp.StatusCode, data)
-	}
-	return data, err
+	return spotify.request(deleteFn)
 }
 
 func (spotify *Spotify) Save(filepath string) error {
