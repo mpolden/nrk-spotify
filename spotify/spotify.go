@@ -338,7 +338,8 @@ func (spotify *Spotify) GetOrCreatePlaylist(name string) (*Playlist, error) {
 	return &playlist, err
 }
 
-func (spotify *Spotify) RecentTracks(playlist *Playlist, n int) ([]PlaylistTrack, error) {
+func (spotify *Spotify) RecentTracks(playlist *Playlist,
+	n int) ([]PlaylistTrack, error) {
 	// If playlist has <= 100 tracks, return the last n tracks without doing
 	// another request
 	if playlist.Tracks.Total <= 100 {
@@ -465,4 +466,8 @@ func (spotify *Spotify) DeleteTracks(playlist *Playlist, tracks []Track) error {
 		return err
 	}
 	return nil
+}
+
+func (spotify *Spotify) DeleteTrack(playlist *Playlist, track *Track) error {
+	return spotify.DeleteTracks(playlist, []Track{*track})
 }

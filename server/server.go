@@ -63,7 +63,7 @@ func (sync *Sync) deleteEvicted(key lru.Key, value interface{}) {
 	track := value.(spotify.Track)
 	logColorf("[light_red]Deleting %s from %s[reset]", track.String(),
 		sync.playlist.Name)
-	err := sync.retryDeleteTrack(track)
+	err := sync.retryDeleteTrack(&track)
 	if err != nil {
 		log.Printf("Failed to delete track: %s", err)
 	}
@@ -77,7 +77,7 @@ func (sync *Sync) initCache() error {
 	var err error
 	for _ = range ticker.C {
 		tracks, err = sync.Spotify.RecentTracks(sync.playlist,
-			sync.CacheSize)
+			sync.playlist.Tracks.Total)
 		if err != nil {
 			log.Printf("Failed to get recent tracks: %s", err)
 			log.Println("Retrying...")
@@ -191,14 +191,13 @@ func (sync *Sync) retryAddTrack(track *spotify.Track) error {
 	return err
 }
 
-func (sync *Sync) retryDeleteTrack(track spotify.Track) error {
+func (sync *Sync) retryDeleteTrack(track *spotify.Track) error {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(1 * time.Minute)
 	ticker := backoff.NewTicker(b)
 	var err error
 	for _ = range ticker.C {
-		err = sync.Spotify.DeleteTracks(sync.playlist,
-			[]spotify.Track{track})
+		err = sync.Spotify.DeleteTrack(sync.playlist, track)
 		if err != nil {
 			log.Printf("Delete track failed: %s", err)
 			log.Println("Retrying...")
