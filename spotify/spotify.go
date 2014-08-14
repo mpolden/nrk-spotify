@@ -87,10 +87,10 @@ func (playlist *Playlist) String() string {
 		playlist.Tracks.Total)
 }
 
-func (spotify *Spotify) update(newToken *Spotify) {
-	spotify.AccessToken = newToken.AccessToken
-	spotify.TokenType = newToken.TokenType
-	spotify.ExpiresIn = newToken.ExpiresIn
+func (spotify *Spotify) update(token *Token) {
+	spotify.AccessToken = token.AccessToken
+	spotify.TokenType = token.TokenType
+	spotify.ExpiresIn = token.ExpiresIn
 }
 
 func (spotify *Spotify) updateToken() error {
@@ -114,7 +114,7 @@ func (spotify *Spotify) updateToken() error {
 		return err
 	}
 
-	var newToken Spotify
+	var newToken Token
 	if err := json.Unmarshal(body, &newToken); err != nil {
 		return err
 	}
