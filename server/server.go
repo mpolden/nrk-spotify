@@ -61,11 +61,12 @@ func (sync *Sync) initPlaylist() error {
 
 func (sync *Sync) deleteEvicted(key lru.Key, value interface{}) {
 	track := value.(spotify.Track)
-	logColorf("[light_red]Deleting %s from %s[reset]", track.String(),
-		sync.playlist.Name)
 	err := sync.retryDeleteTrack(&track)
 	if err != nil {
 		log.Printf("Failed to delete track: %s", err)
+	} else {
+		logColorf("[dark_gray]Deleted evicted track: %s[reset]",
+			track.String())
 	}
 }
 
