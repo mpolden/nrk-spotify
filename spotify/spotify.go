@@ -338,27 +338,41 @@ func (spotify *Spotify) GetOrCreatePlaylist(name string) (*Playlist, error) {
 	return &playlist, err
 }
 
-func (spotify *Spotify) RecentTracks(playlist *Playlist) (
-	[]PlaylistTrack, error) {
-
+func (spotify *Spotify) RecentTracks(playlist *Playlist, n int) ([]PlaylistTrack, error) {
+	// If playlist has <= 100 tracks, return the last n tracks without doing
+	// another request
 	if playlist.Tracks.Total <= 100 {
+		offset := len(playlist.Tracks.Items) - n
+		if offset > 0 {
+			return playlist.Tracks.Items[offset:], nil
+		}
 		return playlist.Tracks.Items, nil
 	}
-	// If playlist has more than 100 tracks, get the 100 last ones
-	offset := playlist.Tracks.Total - 100
+
+	offset := playlist.Tracks.Total - n
+	if offset < 0 {
+		offset = 0
+	}
 	params := url.Values{"offset": {strconv.Itoa(offset)}}
 	url := fmt.Sprintf(
 		"https://api.spotify.com/v1/users/%s/playlists/%s/tracks?",
 		spotify.Profile.Id, playlist.Id)
-	body, err := spotify.get(url + params.Encode())
-	if err != nil {
-		return nil, err
+
+	tracks := make([]PlaylistTrack, 0, n)
+	nextUrl := url + params.Encode()
+	for nextUrl != "" {
+		body, err := spotify.get(nextUrl)
+		if err != nil {
+			return nil, err
+		}
+		var playlistTracks PlaylistTracks
+		if err := json.Unmarshal(body, &playlistTracks); err != nil {
+			return nil, err
+		}
+		tracks = append(tracks, playlistTracks.Items...)
+		nextUrl = playlistTracks.Next
 	}
-	var playlistTracks PlaylistTracks
-	if err := json.Unmarshal(body, &playlistTracks); err != nil {
-		return nil, err
-	}
-	return playlistTracks.Items, nil
+	return tracks, nil
 }
 
 func (spotify *Spotify) Search(query string, types string, limit int) ([]Track,

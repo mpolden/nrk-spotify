@@ -76,7 +76,8 @@ func (sync *Sync) initCache() error {
 	var tracks []spotify.PlaylistTrack
 	var err error
 	for _ = range ticker.C {
-		tracks, err = sync.Spotify.RecentTracks(sync.playlist)
+		tracks, err = sync.Spotify.RecentTracks(sync.playlist,
+			sync.CacheSize)
 		if err != nil {
 			log.Printf("Failed to get recent tracks: %s", err)
 			log.Println("Retrying...")
