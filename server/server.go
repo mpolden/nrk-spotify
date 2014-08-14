@@ -11,13 +11,14 @@ import (
 )
 
 type Sync struct {
-	Spotify   *spotify.Spotify
-	Radio     *nrk.Radio
-	Interval  time.Duration
-	Adaptive  bool
-	CacheSize int
-	playlist  *spotify.Playlist
-	cache     *lru.Cache
+	Spotify       *spotify.Spotify
+	Radio         *nrk.Radio
+	Interval      time.Duration
+	Adaptive      bool
+	CacheSize     int
+	DeleteEvicted bool
+	playlist      *spotify.Playlist
+	cache         *lru.Cache
 }
 
 func logColorf(format string, v ...interface{}) {
@@ -31,7 +32,7 @@ func (sync *Sync) isCached(track *spotify.Track) bool {
 
 func (sync *Sync) addTrack(track *spotify.Track) {
 	if !sync.isCached(track) {
-		sync.cache.Add(track.Id, track)
+		sync.cache.Add(track.Id, *track)
 	}
 }
 
@@ -58,6 +59,16 @@ func (sync *Sync) initPlaylist() error {
 	return nil
 }
 
+func (sync *Sync) deleteEvicted(key lru.Key, value interface{}) {
+	track := value.(spotify.Track)
+	logColorf("[light_red]Deleting %s from %s[reset]", track.String(),
+		sync.playlist.Name)
+	err := sync.retryDeleteTrack(track)
+	if err != nil {
+		log.Printf("Failed to delete track: %s", err)
+	}
+}
+
 func (sync *Sync) initCache() error {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = time.Duration(5 * time.Minute)
@@ -77,6 +88,11 @@ func (sync *Sync) initCache() error {
 		return err
 	}
 	sync.cache = lru.New(sync.CacheSize)
+	if sync.DeleteEvicted {
+		log.Print("Deleting tracks from playlist when they are " +
+			"removed from cache")
+		sync.cache.OnEvicted = sync.deleteEvicted
+	}
 	for _, t := range tracks {
 		sync.addTrack(&t.Track)
 	}
@@ -166,6 +182,24 @@ func (sync *Sync) retryAddTrack(track *spotify.Track) error {
 		err = sync.Spotify.AddTrack(sync.playlist, track)
 		if err != nil {
 			log.Printf("Add track failed: %s", err)
+			log.Println("Retrying...")
+			continue
+		}
+		break
+	}
+	return err
+}
+
+func (sync *Sync) retryDeleteTrack(track spotify.Track) error {
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = time.Duration(1 * time.Minute)
+	ticker := backoff.NewTicker(b)
+	var err error
+	for _ = range ticker.C {
+		err = sync.Spotify.DeleteTracks(sync.playlist,
+			[]spotify.Track{track})
+		if err != nil {
+			log.Printf("Delete track failed: %s", err)
 			log.Println("Retrying...")
 			continue
 		}

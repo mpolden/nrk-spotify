@@ -29,6 +29,7 @@ func makeServer(args map[string]interface{}) (*server.Sync, error) {
 	radioID := args["<radio-id>"].(string)
 	tokenFile := args["--token-file"].(string)
 	adaptive := args["--adaptive"].(bool)
+	deleteEvicted := args["--delete-evicted"].(bool)
 	intervalOpt := args["--interval"].(string)
 	interval, err := strconv.Atoi(intervalOpt)
 	if err != nil || interval < 1 {
@@ -49,11 +50,12 @@ func makeServer(args map[string]interface{}) (*server.Sync, error) {
 		return nil, err
 	}
 	return &server.Sync{
-		Spotify:   s,
-		Radio:     radio,
-		Interval:  time.Duration(interval) * time.Minute,
-		Adaptive:  adaptive,
-		CacheSize: cacheSize,
+		Spotify:       s,
+		Radio:         radio,
+		Interval:      time.Duration(interval) * time.Minute,
+		Adaptive:      adaptive,
+		CacheSize:     cacheSize,
+		DeleteEvicted: deleteEvicted,
 	}, nil
 }
 
@@ -62,7 +64,7 @@ func main() {
 
 Usage:
   nrk-spotify auth [-l <address>] [-f <file>] <client-id> <client-secret>
-  nrk-spotify server [-f <file>] [-i <minutes>] [-a] [-c <max>] <name> <radio-id>
+  nrk-spotify server [-f <file>] [-i <minutes>] [-a] [-d] [-c <max>] <name> <radio-id>
   nrk-spotify list
   nrk-spotify -h | --help
 
@@ -72,7 +74,8 @@ Options:
   -l --listen=<address>    Auth server listening address [default: :8080]
   -i --interval=<minutes>  Polling interval [default: 5]
   -c --cache-size=<max>    Max entries to keep in cache [default: 100]
-  -a --adaptive            Automatically determine sync interval`
+  -a --adaptive            Automatically determine sync interval
+  -d --delete-evicted      Delete evicted (uncached) tracks from playlist`
 
 	arguments, _ := docopt.Parse(usage, nil, true, "", false)
 	auth := arguments["auth"].(bool)
