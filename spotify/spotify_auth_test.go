@@ -22,12 +22,12 @@ func TestURL(t *testing.T) {
 }
 
 func TestListenURL(t *testing.T) {
-	auth := Auth{Listen: ":8080"}
+	auth := Auth{listen: ":8080"}
 	if auth.ListenURL() != "http://localhost:8080" {
 		t.Fatalf("Expected http://localhost:8080, got %s",
 			auth.ListenURL())
 	}
-	auth = Auth{Listen: "1.2.3.4:8080"}
+	auth = Auth{listen: "1.2.3.4:8080"}
 	if auth.ListenURL() != "http://1.2.3.4:8080" {
 		t.Fatalf("Expected http://1.2.3.4:8080, got %s",
 			auth.ListenURL())
@@ -35,7 +35,7 @@ func TestListenURL(t *testing.T) {
 }
 
 func TestCallbackURL(t *testing.T) {
-	auth := Auth{Listen: ":8080"}
+	auth := Auth{listen: ":8080"}
 	if url := auth.CallbackURL(); url != "http://localhost:8080/callback" {
 		t.Fatalf("Expected http://localhost:8080/callback, got %s", url)
 	}

@@ -21,7 +21,7 @@ type Auth struct {
 	ClientId     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 	TokenFile    string `json:"token_file"`
-	Listen       string
+	listen       string
 	listenURL    string
 	url          string
 }
@@ -37,10 +37,10 @@ func (auth *Auth) ListenURL() string {
 	if auth.listenURL != "" {
 		return auth.listenURL
 	}
-	if strings.HasPrefix(auth.Listen, ":") {
-		return "http://localhost" + auth.Listen
+	if strings.HasPrefix(auth.listen, ":") {
+		return "http://localhost" + auth.listen
 	}
-	return "http://" + auth.Listen
+	return "http://" + auth.listen
 }
 
 func (auth *Auth) CallbackURL() string {
@@ -140,11 +140,12 @@ func (auth *Auth) Callback(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Success! Wrote token file to %s", auth.TokenFile)
 }
 
-func (auth *Auth) Serve() {
+func (auth *Auth) Serve(listen string) {
+	auth.listen = listen
 	http.HandleFunc("/login", auth.Login)
 	http.HandleFunc("/callback", auth.Callback)
 	fmt.Printf(colorstring.Color(
 		"Visit [green]%s/login[reset] to authenticate "+
 			"with Spotify.\n"), auth.ListenURL())
-	http.ListenAndServe(auth.Listen, nil)
+	http.ListenAndServe(auth.listen, nil)
 }

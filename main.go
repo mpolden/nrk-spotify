@@ -11,16 +11,15 @@ import (
 	"time"
 )
 
-func makeSpotifyAuth(args map[string]interface{}) *spotify.Auth {
+func makeSpotifyAuth(args map[string]interface{}) (string, *spotify.Auth) {
 	clientId := args["<client-id>"].(string)
 	clientSecret := args["<client-secret>"].(string)
 	listen := args["--listen"].(string)
 	tokenFile := args["--token-file"].(string)
-	return &spotify.Auth{
+	return listen, &spotify.Auth{
 		ClientId:     clientId,
 		ClientSecret: clientSecret,
 		TokenFile:    tokenFile,
-		Listen:       listen,
 	}
 }
 
@@ -82,8 +81,8 @@ Options:
 	server := arguments["server"].(bool)
 
 	if auth {
-		spotifyAuth := makeSpotifyAuth(arguments)
-		spotifyAuth.Serve()
+		listen, spotifyAuth := makeSpotifyAuth(arguments)
+		spotifyAuth.Serve(listen)
 	} else if server {
 		server, err := makeServer(arguments)
 		if err != nil {
