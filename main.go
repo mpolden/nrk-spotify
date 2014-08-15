@@ -82,7 +82,9 @@ Options:
 
 	if auth {
 		listen, spotifyAuth := makeSpotifyAuth(arguments)
-		spotifyAuth.Serve(listen)
+		if err := spotifyAuth.Serve(listen); err != nil {
+			log.Fatalf("Failed to start auth server: %s", err)
+		}
 	} else if server {
 		server, err := makeServer(arguments)
 		if err != nil {

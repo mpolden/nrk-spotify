@@ -140,12 +140,12 @@ func (auth *Auth) Callback(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Success! Wrote token file to %s", auth.TokenFile)
 }
 
-func (auth *Auth) Serve(listen string) {
+func (auth *Auth) Serve(listen string) error {
 	auth.listen = listen
 	http.HandleFunc("/login", auth.Login)
 	http.HandleFunc("/callback", auth.Callback)
 	fmt.Printf(colorstring.Color(
 		"Visit [green]%s/login[reset] to authenticate "+
 			"with Spotify.\n"), auth.ListenURL())
-	http.ListenAndServe(auth.listen, nil)
+	return http.ListenAndServe(auth.listen, nil)
 }
