@@ -77,6 +77,14 @@ func (radio *Radio) URL() string {
 	return url + fmt.Sprintf("/channels/%s/liveelements/now", radio.ID)
 }
 
+func (track *Track) ArtistName() string {
+	words := strings.Split(track.Artist, " + ")
+	if len(words) > 0 {
+		return words[0]
+	}
+	return track.Artist
+}
+
 func (playlist *Playlist) Previous() (*Track, error) {
 	if len(playlist.Tracks) > 0 {
 		return &playlist.Tracks[0], nil
@@ -158,7 +166,7 @@ func (track *Track) Position() (Position, error) {
 }
 
 func (track *Track) String() string {
-	return fmt.Sprintf("%s - %s", track.Artist, track.Track)
+	return fmt.Sprintf("%s - %s", track.ArtistName(), track.Track)
 }
 
 func (position *Position) String() string {

@@ -277,6 +277,33 @@ func TestCurrentAndNextInvalidLength(t *testing.T) {
 	}
 }
 
+func TestArtistName(t *testing.T) {
+	track := testTrack()
+	if track.ArtistName() != "Bob Dylan" {
+		t.Fatalf("Expected \"Bob Dylan\", got \"%s\"",
+			track.ArtistName())
+	}
+	track.Artist = "Bob Dylan + The Band"
+	if track.ArtistName() != "Bob Dylan" {
+		t.Fatalf("Expected \"Bob Dylan\", got \"%s\"",
+			track.ArtistName())
+	}
+}
+
+func TestTrackString(t *testing.T) {
+	track := testTrack()
+	expected := "Bob Dylan - Like a Rolling Stone"
+	if track.String() != expected {
+		t.Fatalf("Expected \"%s\", got \"%s\"", expected,
+			track.String())
+	}
+	track.Artist = "Bob Dylan + The Band"
+	if track.String() != expected {
+		t.Fatalf("Expected \"%s\", got \"%s\"", expected,
+			track.String())
+	}
+}
+
 func newTestServer(path string, body string) *httptest.Server {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

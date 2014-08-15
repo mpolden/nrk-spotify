@@ -162,8 +162,8 @@ func (sync *Sync) retrySearch(track *nrk.Track) ([]spotify.Track, error) {
 	var tracks []spotify.Track
 	var err error
 	for _ = range ticker.C {
-		tracks, err = sync.Spotify.SearchArtistTrack(track.Artist,
-			track.Track)
+		tracks, err = sync.Spotify.SearchArtistTrack(
+			track.ArtistName(), track.Track)
 		if err != nil {
 			log.Printf("Search failed: %s", err)
 			log.Println("Retrying...")
