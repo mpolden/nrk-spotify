@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mitchellh/colorstring"
+	"github.com/mreiferson/go-httpclient"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -13,7 +14,13 @@ import (
 	"time"
 )
 
-var client = &http.Client{}
+var transport = &httpclient.Transport{
+	ConnectTimeout:        2 * time.Second,
+	RequestTimeout:        10 * time.Second,
+	ResponseHeaderTimeout: 5 * time.Second,
+}
+
+var client = &http.Client{Transport: transport}
 
 var ids = [...]string{
 	"p1pluss",

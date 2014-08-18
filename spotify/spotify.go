@@ -4,13 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/mreiferson/go-httpclient"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
-var client = &http.Client{}
+var transport = &httpclient.Transport{
+	ConnectTimeout:        2 * time.Second,
+	RequestTimeout:        10 * time.Second,
+	ResponseHeaderTimeout: 5 * time.Second,
+}
+
+var client = &http.Client{Transport: transport}
 
 type Spotify struct {
 	Token   `json:"token"`
