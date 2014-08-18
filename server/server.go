@@ -60,14 +60,16 @@ func (sync *Sync) initPlaylist() error {
 }
 
 func (sync *Sync) deleteEvicted(key lru.Key, value interface{}) {
-	track := value.(spotify.Track)
-	err := sync.retryDeleteTrack(&track)
-	if err != nil {
-		log.Printf("Failed to delete track: %s", err)
-	} else {
-		logColorf("[dark_gray]Deleted evicted track: %s[reset]",
-			track.String())
+	track, ok := value.(spotify.Track)
+	if !ok {
+		log.Print("Could not cast to spotify.Track: %+v", value)
+		return
 	}
+	if err := sync.retryDeleteTrack(&track); err != nil {
+		log.Printf("Failed to delete track: %s", err)
+		return
+	}
+	logColorf("[dark_gray]Deleted evicted track: %s[reset]", track.String())
 }
 
 func (sync *Sync) initCache() error {
