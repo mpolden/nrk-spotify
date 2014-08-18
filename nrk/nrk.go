@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+var client = &http.Client{}
+
 var ids = [...]string{
 	"p1pluss",
 	"p2",
@@ -236,7 +238,11 @@ func (playlist *Playlist) Remaining(track *Track) (time.Duration, error) {
 }
 
 func (radio *Radio) Playlist() (*Playlist, error) {
-	resp, err := http.Get(radio.URL())
+	req, err := http.NewRequest("GET", radio.URL(), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}

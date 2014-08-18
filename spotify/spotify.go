@@ -10,6 +10,8 @@ import (
 	"strconv"
 )
 
+var client = &http.Client{}
+
 type Spotify struct {
 	Token   `json:"token"`
 	Auth    `json:"auth"`
@@ -160,12 +162,11 @@ func (spotify *Spotify) request(reqFn requestFn) ([]byte, error) {
 
 func (spotify *Spotify) get(url string) ([]byte, error) {
 	getFn := func() (*http.Response, error) {
-		client := &http.Client{}
 		req, err := http.NewRequest("GET", url, nil)
-		req.Header.Set("Authorization", spotify.authHeader())
 		if err != nil {
 			return nil, err
 		}
+		req.Header.Set("Authorization", spotify.authHeader())
 		return client.Do(req)
 	}
 	return spotify.request(getFn)
@@ -173,13 +174,12 @@ func (spotify *Spotify) get(url string) ([]byte, error) {
 
 func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
 	postFn := func() (*http.Response, error) {
-		client := &http.Client{}
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-		req.Header.Set("Authorization", spotify.authHeader())
-		req.Header.Set("Content-Type", "application/json")
 		if err != nil {
 			return nil, err
 		}
+		req.Header.Set("Authorization", spotify.authHeader())
+		req.Header.Set("Content-Type", "application/json")
 		return client.Do(req)
 	}
 	return spotify.request(postFn)
@@ -187,14 +187,13 @@ func (spotify *Spotify) post(url string, body []byte) ([]byte, error) {
 
 func (spotify *Spotify) delete(url string, body []byte) ([]byte, error) {
 	deleteFn := func() (*http.Response, error) {
-		client := &http.Client{}
 		req, err := http.NewRequest("DELETE", url,
 			bytes.NewBuffer(body))
-		req.Header.Set("Authorization", spotify.authHeader())
-		req.Header.Set("Content-Type", "application/json")
 		if err != nil {
 			return nil, err
 		}
+		req.Header.Set("Authorization", spotify.authHeader())
+		req.Header.Set("Content-Type", "application/json")
 		return client.Do(req)
 	}
 	return spotify.request(deleteFn)
