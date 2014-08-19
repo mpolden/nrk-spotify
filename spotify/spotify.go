@@ -42,9 +42,10 @@ type Profile struct {
 }
 
 type Playlist struct {
-	Id     string         `json:"id"`
-	Name   string         `json:"name"`
-	Tracks PlaylistTracks `json:"tracks"`
+	Id         string         `json:"id"`
+	Name       string         `json:"name"`
+	SnapshotID string         `json:"snapshot_id"`
+	Tracks     PlaylistTracks `json:"tracks"`
 }
 
 type PlaylistTracks struct {
@@ -434,20 +435,31 @@ func (spotify *Spotify) DeleteTracks(playlist *Playlist, tracks []Track) error {
 		"https://api.spotify.com/v1/users/%s/playlists/%s/tracks",
 		spotify.Profile.Id, playlist.Id)
 
-	uris := make([]map[string]string, len(tracks))
+	type trackUri struct {
+		Uri string `json:"uri"`
+	}
+
+	type requestBody struct {
+		Tracks     []trackUri `json:"tracks"`
+		SnapshotID string     `json:"snapshot_id"`
+	}
+
+	uris := make([]trackUri, len(tracks))
 	for i, track := range tracks {
-		uris[i] = map[string]string{
-			"uri": track.Uri,
+		uris[i] = trackUri{
+			Uri: track.Uri,
 		}
 	}
-	trackUris := map[string][]map[string]string{
-		"tracks": uris,
+
+	body := requestBody{
+		Tracks:     uris,
+		SnapshotID: playlist.SnapshotID,
 	}
-	jsonUris, err := json.Marshal(trackUris)
+	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
-	if _, err := spotify.delete(url, jsonUris); err != nil {
+	if _, err := spotify.delete(url, jsonBody); err != nil {
 		return err
 	}
 	return nil
