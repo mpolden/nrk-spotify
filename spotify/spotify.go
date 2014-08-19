@@ -439,7 +439,7 @@ func (spotify *Spotify) DeleteTracks(playlist *Playlist, tracks []Track) error {
 		Uri string `json:"uri"`
 	}
 
-	type deleteTrack struct {
+	type requestBody struct {
 		Tracks     []trackUri `json:"tracks"`
 		SnapshotID string     `json:"snapshot_id"`
 	}
@@ -451,23 +451,17 @@ func (spotify *Spotify) DeleteTracks(playlist *Playlist, tracks []Track) error {
 		}
 	}
 
-	reqBody := deleteTrack{
+	body := requestBody{
 		Tracks:     uris,
 		SnapshotID: playlist.SnapshotID,
 	}
-	jsonBody, err := json.Marshal(reqBody)
+	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
-	body, err := spotify.delete(url, jsonBody)
-	if err != nil {
+	if _, err := spotify.delete(url, jsonBody); err != nil {
 		return err
 	}
-	var result deleteTrack
-	if err := json.Unmarshal(body, &result); err != nil {
-		return err
-	}
-	playlist.SnapshotID = result.SnapshotID
 	return nil
 }
 
