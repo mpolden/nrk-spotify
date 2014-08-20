@@ -232,7 +232,7 @@ func New(filepath string) (*Spotify, error) {
 	if spotify.Auth.TokenFile != filepath {
 		spotify.Auth.TokenFile = filepath
 		if err := spotify.Save(filepath); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if spotify.Profile.Id == "" {
