@@ -228,6 +228,13 @@ func New(filepath string) (*Spotify, error) {
 	if err := json.Unmarshal(data, &spotify); err != nil {
 		return nil, err
 	}
+	// Fix path to token file, in case it has moved
+	if spotify.Auth.TokenFile != filepath {
+		spotify.Auth.TokenFile = filepath
+		if err := spotify.Save(filepath); err != nil {
+			return err
+		}
+	}
 	if spotify.Profile.Id == "" {
 		if err := spotify.SetCurrentUser(); err != nil {
 			return nil, err
