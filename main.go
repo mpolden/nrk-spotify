@@ -30,6 +30,10 @@ func makeServer(args map[string]interface{}) (*server.Sync, error) {
 	adaptive := args["--adaptive"].(bool)
 	deleteEvicted := args["--delete-evicted"].(bool)
 	intervalOpt := args["--interval"].(string)
+	memProfile, ok := args["--memprofile"].(string)
+	if !ok {
+		memProfile = ""
+	}
 	interval, err := strconv.Atoi(intervalOpt)
 	if err != nil || interval < 1 {
 		return nil, fmt.Errorf("--interval must be an positive integer")
@@ -55,6 +59,7 @@ func makeServer(args map[string]interface{}) (*server.Sync, error) {
 		Adaptive:      adaptive,
 		CacheSize:     cacheSize,
 		DeleteEvicted: deleteEvicted,
+		MemProfile:    memProfile,
 	}, nil
 }
 
@@ -63,7 +68,7 @@ func main() {
 
 Usage:
   nrk-spotify auth [-l <address>] [-f <file>] <client-id> <client-secret>
-  nrk-spotify server [-f <file>] [-i <minutes>] [-a] [-d] [-c <max>] <name> <radio-id>
+  nrk-spotify server [-f <file>] [-i <minutes>] [-a] [-d] [-c <max>] [-p <file>] <name> <radio-id>
   nrk-spotify list
   nrk-spotify -h | --help
 
@@ -74,7 +79,8 @@ Options:
   -i --interval=<minutes>  Polling interval [default: 5]
   -c --cache-size=<max>    Max entries to keep in cache [default: 100]
   -a --adaptive            Automatically determine sync interval
-  -d --delete-evicted      Delete evicted (uncached) tracks from playlist`
+  -d --delete-evicted      Delete evicted (uncached) tracks from playlist
+  -p --memprofile=<file>   Write heap profile after each run. Debug option`
 
 	arguments, _ := docopt.Parse(usage, nil, true, "", false)
 	auth := arguments["auth"].(bool)

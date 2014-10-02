@@ -7,6 +7,8 @@ import (
 	"github.com/martinp/nrk-spotify/spotify"
 	"github.com/mitchellh/colorstring"
 	"log"
+	"os"
+	"runtime/pprof"
 	"time"
 )
 
@@ -19,6 +21,7 @@ type Sync struct {
 	DeleteEvicted bool
 	playlist      *spotify.Playlist
 	cache         *lru.Cache
+	MemProfile    string
 }
 
 func logColorf(format string, v ...interface{}) {
@@ -129,6 +132,18 @@ func (sync *Sync) Serve() {
 	}
 }
 
+func (sync *Sync) memProfile() error {
+	f, err := os.Create(sync.MemProfile)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if err := pprof.WriteHeapProfile(f); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (sync *Sync) runForever() <-chan time.Time {
 	duration, err := sync.run()
 	if err != nil {
@@ -136,6 +151,12 @@ func (sync *Sync) runForever() <-chan time.Time {
 		duration = sync.Interval
 	}
 	log.Printf("Next sync in %s", duration)
+	if sync.MemProfile != "" {
+		log.Printf("Writing memory profile to: %s", sync.MemProfile)
+		if err := sync.memProfile(); err != nil {
+			log.Print(err)
+		}
+	}
 	return time.After(duration)
 }
 
