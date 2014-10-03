@@ -53,6 +53,7 @@ func (sync *Sync) initPlaylist() error {
 			log.Println("Retrying...")
 			continue
 		}
+		ticker.Stop()
 		break
 	}
 	if err != nil {
@@ -89,6 +90,7 @@ func (sync *Sync) initCache() error {
 			log.Println("Retrying...")
 			continue
 		}
+		ticker.Stop()
 		break
 	}
 	if err != nil {
@@ -173,6 +175,7 @@ func (sync *Sync) retryPlaylist() (*nrk.Playlist, error) {
 			log.Println("Retrying...")
 			continue
 		}
+		ticker.Stop()
 		break
 	}
 	return playlist, err
@@ -192,6 +195,7 @@ func (sync *Sync) retrySearch(track *nrk.Track) ([]spotify.Track, error) {
 			log.Println("Retrying...")
 			continue
 		}
+		ticker.Stop()
 		break
 	}
 	return tracks, err
@@ -209,6 +213,7 @@ func (sync *Sync) retryAddTrack(track *spotify.Track) error {
 			log.Println("Retrying...")
 			continue
 		}
+		ticker.Stop()
 		break
 	}
 	return err
@@ -226,6 +231,7 @@ func (sync *Sync) retryDeleteTrack(track *spotify.Track) error {
 			log.Println("Retrying...")
 			continue
 		}
+		ticker.Stop()
 		break
 	}
 	return err
