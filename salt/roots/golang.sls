@@ -2,7 +2,7 @@ curl:
   pkg:
     - installed
 
-curl -L http://golang.org/dl/go1.3.1.linux-amd64.tar.gz | tar -zxC /usr/local:
+curl -L http://golang.org/dl/go1.3.3.linux-amd64.tar.gz | tar -zxC /usr/local:
   cmd.run:
     - unless: test -d /usr/local/go
 
