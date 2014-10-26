@@ -1,16 +1,6 @@
-FROM ubuntu:14.04
+FROM golang:onbuild
 
-# Time zone
-ENV DEBIAN_FRONTEND noninteractive
-RUN echo "Europe/Oslo" > /etc/timezone
-RUN dpkg-reconfigure tzdata
+# Default port for auth server
+EXPOSE 8080
 
-# Install ca-certificates
-RUN apt-get -y update
-RUN apt-get -y install ca-certificates
-
-# Add app
-RUN mkdir /app
-ADD bin/nrk-spotify /app/nrk-spotify
-RUN chmod 0755 /app/nrk-spotify
-ENTRYPOINT ["/app/nrk-spotify"]
+ENTRYPOINT ["/go/bin/app"]
