@@ -1,14 +1,9 @@
-git:
-  pkg:
-    - installed
-
-make:
-  pkg:
-    - installed
-
-mercurial:
-  pkg:
-    - installed
+packages:
+  pkg.installed:
+    - pkgs:
+        - git
+        - make
+        - mercurial
 
 /home/vagrant/.hushlogin:
   file.managed:
@@ -23,3 +18,17 @@ mercurial:
     - user: vagrant
     - group: vagrant
     - mode: 0644
+
+/home/vagrant/.local/bin:
+  file.directory:
+    - user: vagrant
+    - group: vagrant
+    - makedirs: true
+
+/go:
+  file.directory:
+    - user: vagrant
+    - group: vagrant
+    - recurse:
+        - user
+        - group

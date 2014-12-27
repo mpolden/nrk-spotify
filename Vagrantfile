@@ -3,7 +3,7 @@
 
 Vagrant.configure("2") do |config|
   config.vm.box = "chef/ubuntu-14.04"
-  config.vm.synced_folder ".", "/vagrant"
+  config.vm.synced_folder ".", "/go/src/github.com/martinp/nrk-spotify"
   config.vm.synced_folder "salt/roots/", "/srv/salt/"
   config.vm.network :forwarded_port, guest: 8080, host: 8080
   config.vm.provider :virtualbox do |vb|
