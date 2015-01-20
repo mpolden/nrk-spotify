@@ -12,6 +12,15 @@ import (
 	"time"
 )
 
+var Colorize colorstring.Colorize
+
+func init() {
+	Colorize = colorstring.Colorize{
+		Colors: colorstring.DefaultColors,
+		Reset:  true,
+	}
+}
+
 type Sync struct {
 	Spotify       *spotify.Spotify
 	Radio         *nrk.Radio
@@ -25,7 +34,7 @@ type Sync struct {
 }
 
 func logColorf(format string, v ...interface{}) {
-	log.Printf(colorstring.Color(format), v...)
+	log.Printf(Colorize.Color(format), v...)
 }
 
 func (sync *Sync) isCached(track *spotify.Track) bool {
@@ -250,7 +259,7 @@ func (sync *Sync) logCurrentTrack(playlist *nrk.Playlist) {
 	}
 	logColorf("[cyan]%s is currently playing: %s - %s[reset] (%s) [%s]",
 		sync.Radio.Name, current.Artist, current.Track,
-		position.String(), position.Symbol(10, true))
+		position.String(), position.Symbol(10, !Colorize.Disable))
 }
 
 func (sync *Sync) run() (time.Duration, error) {

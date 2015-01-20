@@ -31,6 +31,7 @@ func makeServer(args map[string]interface{}) (*server.Sync, error) {
 	deleteEvicted := args["--delete-evicted"].(bool)
 	intervalOpt := args["--interval"].(string)
 	memProfile, ok := args["--memprofile"].(string)
+	colors := args["--colors"].(bool)
 	if !ok {
 		memProfile = ""
 	}
@@ -52,6 +53,7 @@ func makeServer(args map[string]interface{}) (*server.Sync, error) {
 	if err != nil {
 		return nil, err
 	}
+	server.Colorize.Disable = !colors
 	return &server.Sync{
 		Spotify:       s,
 		Radio:         radio,
@@ -68,7 +70,7 @@ func main() {
 
 Usage:
   nrk-spotify auth [-l <address>] [-f <file>] <client-id> <client-secret>
-  nrk-spotify server [-f <file>] [-i <minutes>] [-a] [-d] [-c <max>] [-p <file>] <name> <radio-id>
+  nrk-spotify server [-f <file>] [-i <minutes>] [-a] [-d] [-c <max>] [-p <file>] [-x] <name> <radio-id>
   nrk-spotify list
   nrk-spotify -h | --help
 
@@ -80,6 +82,7 @@ Options:
   -c --cache-size=<max>    Max entries to keep in cache [default: 100]
   -a --adaptive            Automatically determine sync interval
   -d --delete-evicted      Delete evicted (uncached) tracks from playlist
+  -x --colors              Use colors in log output
   -p --memprofile=<file>   Write heap profile after each run. Debug option`
 
 	arguments, _ := docopt.Parse(usage, nil, true, "", false)
