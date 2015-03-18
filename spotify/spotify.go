@@ -144,7 +144,7 @@ func (spotify *Spotify) request(reqFn requestFn) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 401 {
+	if resp.StatusCode == 401 || resp.StatusCode == 400 {
 		if err := spotify.updateToken(); err != nil {
 			return nil, err
 		}
