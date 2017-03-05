@@ -1,15 +1,16 @@
 package server
 
 import (
+	"log"
+	"os"
+	"runtime/pprof"
+	"time"
+
 	"github.com/cenkalti/backoff"
 	"github.com/golang/groupcache/lru"
 	"github.com/martinp/nrk-spotify/nrk"
 	"github.com/martinp/nrk-spotify/spotify"
 	"github.com/mitchellh/colorstring"
-	"log"
-	"os"
-	"runtime/pprof"
-	"time"
 )
 
 var Colorize colorstring.Colorize
@@ -75,7 +76,7 @@ func (sync *Sync) initPlaylist() error {
 func (sync *Sync) deleteEvicted(key lru.Key, value interface{}) {
 	track, ok := value.(spotify.Track)
 	if !ok {
-		log.Print("Could not cast to spotify.Track: %+v", value)
+		log.Printf("Could not cast to spotify.Track: %+v", value)
 		return
 	}
 	if err := sync.retryDeleteTrack(&track); err != nil {
