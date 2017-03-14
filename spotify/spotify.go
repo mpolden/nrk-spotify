@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/mreiferson/go-httpclient"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/mreiferson/go-httpclient"
 )
 
 var transport = &httpclient.Transport{

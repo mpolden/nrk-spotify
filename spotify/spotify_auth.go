@@ -5,11 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/mitchellh/colorstring"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/mitchellh/colorstring"
 )
 
 const defaultAuthURL string = "https://accounts.spotify.com"

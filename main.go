@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/docopt/docopt-go"
-	"github.com/martinp/nrk-spotify/nrk"
-	"github.com/martinp/nrk-spotify/server"
-	"github.com/martinp/nrk-spotify/spotify"
 	"log"
 	"strconv"
 	"time"
+
+	"github.com/docopt/docopt-go"
+	"github.com/mpolden/nrk-spotify/nrk"
+	"github.com/mpolden/nrk-spotify/server"
+	"github.com/mpolden/nrk-spotify/spotify"
 )
 
 func makeSpotifyAuth(args map[string]interface{}) (string, *spotify.Auth) {

@@ -3,8 +3,6 @@ package nrk
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mitchellh/colorstring"
-	"github.com/mreiferson/go-httpclient"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -12,6 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mitchellh/colorstring"
+	"github.com/mreiferson/go-httpclient"
 )
 
 var transport = &httpclient.Transport{

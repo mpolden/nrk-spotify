@@ -8,9 +8,9 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/golang/groupcache/lru"
-	"github.com/martinp/nrk-spotify/nrk"
-	"github.com/martinp/nrk-spotify/spotify"
 	"github.com/mitchellh/colorstring"
+	"github.com/mpolden/nrk-spotify/nrk"
+	"github.com/mpolden/nrk-spotify/spotify"
 )
 
 var Colorize colorstring.Colorize
