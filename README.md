@@ -45,7 +45,7 @@ Install:
 
 ...or if you prefer to use `go get`:
 
-`$ go get github.com/martinp/nrk-spotify`
+`$ go get github.com/mpolden/nrk-spotify`
 
 ## In action
 
